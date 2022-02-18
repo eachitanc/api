@@ -140,17 +140,17 @@ $app->get('/res/lista/{id}', function (Request $request, Response $response) {
                     ON (seg_departamento.id_pais = seg_pais.id_pais) AND (seg_terceros.departamento = seg_departamento.id_dpto)
                 INNER JOIN seg_municipios 
                     ON (seg_municipios.id_departamento = seg_departamento.id_dpto) AND (seg_terceros.municipio = seg_municipios.id_municipio)
-                WHERE cc_nit  IN ($ids)";
+                WHERE cc_nit  IN ($ids) ORDER BY apellido1,apellido2, nombre1,nombre2,razon_social";
         $rs = $cmd->query($sql);
         $terceros = $rs->fetchAll();
+        if (!empty($terceros)) {
+            echo json_encode($terceros);
+        } else {
+            echo json_encode('0');
+        }
         $cmd = null;
     } catch (PDOException $e) {
         echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
-    }
-    if (!empty($terceros)) {
-        echo json_encode($terceros);
-    } else {
-        echo json_encode('0');
     }
 });
 //GET Datos UP por ID
@@ -219,7 +219,6 @@ $app->post('/res/nuevo', function (Request $request, Response $response) {
     $dir = $data['txtDireccion'];
     $mail = $data['mailEmp'];
     $tel = $data['txtTelEmp'];
-    $contrasena = $data['passT'];
     $iduser = $data['id_user'];
     $tipouser = 'user';
     $docreg = $data['nit_emp'];
@@ -252,12 +251,12 @@ $app->post('/res/nuevo', function (Request $request, Response $response) {
         $sql->bindParam(18, $tipouser, PDO::PARAM_STR);
         $sql->bindValue(19, $date->format('Y-m-d H:i:s'));
         $sql->bindParam(20, $docreg, PDO::PARAM_STR);
-
         $sql->execute();
-        if ($cmd->lastInsertId() > 0) {
-            echo json_encode('1');
+        $id_api = $cmd->lastInsertId();
+        if ($id_api > 0) {
+            echo json_encode($id_api);
         } else {
-            echo json_encode(print_r($sql->errorInfo()[2]));
+            echo json_encode($sql->errorInfo()[2]);
         }
         $cmd = null;
     } catch (PDOException $e) {
@@ -283,7 +282,7 @@ $app->put('/res/modificar/pass', function (Request $request, Response $response)
         $sql->execute();
         $cambio = $sql->rowCount();
         if (!($sql->execute())) {
-            echo json_encode(print_r($sql->errorInfo()[2]));
+            echo json_encode($sql->errorInfo()[2]);
         } else {
             if ($cambio > 0) {
                 $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
@@ -296,9 +295,9 @@ $app->put('/res/modificar/pass', function (Request $request, Response $response)
                 $sql->bindParam(4, $idter, PDO::PARAM_INT);
                 $sql->execute();
                 if ($sql->rowCount() > 0) {
-                    echo json_encode('1');
+                    echo json_encode(1);
                 } else {
-                    echo json_encode(print_r($sql->errorInfo()[2]));
+                    echo json_encode($sql->errorInfo()[2]);
                 }
             } else {
                 echo json_encode('No se ingresó ningún dato nuevo');
@@ -357,7 +356,7 @@ $app->put('/res/modificar/tercero/{id}', function (Request $request, Response $r
         $sql->execute();
         $cambio = $sql->rowCount();
         if (!($sql->execute())) {
-            echo json_encode(print_r($sql->errorInfo()[2]));
+            echo json_encode($sql->errorInfo()[2]);
         } else {
             if ($cambio > 0) {
                 $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
@@ -371,9 +370,9 @@ $app->put('/res/modificar/tercero/{id}', function (Request $request, Response $r
                 $sql->bindParam(5, $idter, PDO::PARAM_INT);
                 $sql->execute();
                 if ($sql->rowCount() > 0) {
-                    echo json_encode('1');
+                    echo json_encode(1);
                 } else {
-                    echo json_encode(print_r($sql->errorInfo()[2]));
+                    echo json_encode($sql->errorInfo()[2]);
                 }
             } else {
                 echo json_encode('No se ingresó datos nuevos');
@@ -419,9 +418,9 @@ $app->PUT('/res/nuevo/responsabilidad', function (Request $request, Response $re
                 $sql->bindValue(6, $date->format('Y-m-d H:i:s'));
                 $sql->execute();
                 if ($cmd->lastInsertId() > 0) {
-                    echo json_encode('1');
+                    echo json_encode(1);
                 } else {
-                    echo json_encode(print_r($sql->errorInfo()[2]));
+                    echo json_encode($sql->errorInfo()[2]);
                 }
                 $cmd = null;
             } catch (PDOException $e) {
@@ -492,6 +491,36 @@ $app->PUT('/res/modificar/estado/actividad', function (Request $request, Respons
         echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
     }
 });
+//Actualizar estado documento de soporte 
+$app->PUT('/res/actualizar/estado_doc_soporte', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $estado = $data["estado"];
+    $id_doc = $data["id_doc"];
+    $iduser = $data["iduser"];
+    $tipuser = $data["tipuser"];
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    try {
+        include $GLOBALS['conexion'];
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "UPDATE `seg_docs_contrato` SET `estado` = ?, `fec_act` = ?, `id_user_act` = ?, `tipo_user_act` = ? WHERE `id_doc_c` = ?";
+        $sql = $cmd->prepare($sql);
+        $sql->bindParam(1, $estado);
+        $sql->bindValue(2, $date->format('Y-m-d H:i:s'));
+        $sql->bindParam(3, $iduser);
+        $sql->bindParam(4, $tipuser);
+        $sql->bindParam(5, $id_doc);
+        $sql->execute();
+        if ($sql->rowCount() > 0) {
+            echo json_encode(1);
+        } else {
+            json_encode($sql->errorInfo()[2]);
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
 //PUT Nuevo Actividad Tercero
 $app->put('/res/nuevo/actividad', function (Request $request, Response $response) {
     $data = json_decode(file_get_contents('php://input'), true);
@@ -528,9 +557,9 @@ $app->put('/res/nuevo/actividad', function (Request $request, Response $response
                 $sql->bindValue(7, $date->format('Y-m-d H:i:s'));
                 $sql->execute();
                 if ($cmd->lastInsertId() > 0) {
-                    echo json_encode('1');
+                    echo json_encode(1);
                 } else {
-                    print_r($sql->errorInfo()[2]);
+                    $sql->errorInfo()[2];
                 }
                 $cmd = null;
             } catch (PDOException $e) {
@@ -631,9 +660,9 @@ $app->put('/res/nuevo/documento', function (Request $request, Response $response
             $sql->bindValue(9, $date->format('Y-m-d H:i:s'));
             $sql->execute();
             if ($cmd->lastInsertId() > 0) {
-                echo json_encode('1');
+                echo json_encode(1);
             } else {
-                echo json_encode(print_r($sql->errorInfo()[2]));
+                echo json_encode($sql->errorInfo()[2]);
             }
         } else {
             echo json_encode('No se pudo adjuntar el archivo');
@@ -667,6 +696,7 @@ $app->put('/res/nuevo/contrato', function (Request $request, Response $response)
     $nom_archivo = $data["nom_archivo"];
     $temporal = $data["temporal"];
     $temporal = base64_decode($temporal);
+    $r = [];
     try {
         $ruta = '../../uploads/terceros/contratos/' . $doc_tercero . '/';
         if (!file_exists($ruta)) {
@@ -690,16 +720,30 @@ $app->put('/res/nuevo/contrato', function (Request $request, Response $response)
             $sql->bindParam(8, $tipuser, PDO::PARAM_STR);
             $sql->bindValue(9, $date->format('Y-m-d H:i:s'));
             $sql->execute();
-            if ($cmd->lastInsertId() > 0) {
-                echo json_encode('1');
+            $id_crad = $cmd->lastInsertId();
+            if ($id_crad > 0) {
+                $r = [
+                    'estado' => 1,
+                    'response' => $id_crad,
+                ];
+                echo json_encode($r);
             } else {
-                echo json_encode(print_r($sql->errorInfo()[2]));
+                $r = [
+                    'estado' => 0,
+                    'response' => $sql->errorInfo()[2],
+                ];
+                echo json_encode($r);
             }
+            $cdm = null;
         } else {
-            echo json_encode('No se pudo adjuntar el archivo');
+            $r = [
+                'estado' => 0,
+                'response' => 'No se pudo adjuntar el archivo',
+            ];
+            echo json_encode($r);
         }
     } catch (PDOException $e) {
-        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+        echo $res['response'] = ($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
     }
 });
 //nuevo contrado devuelto
@@ -748,16 +792,16 @@ $app->put('/res/nuevo/contrato_devolver', function (Request $request, Response $
                     $sql->bindParam(5, $id, PDO::PARAM_INT);
                     $sql->execute();
                     if (!($sql->rowCount() > 0)) {
-                        echo json_encode(print_r($sql->errorInfo()[2]));
+                        echo json_encode($sql->errorInfo()[2]);
                     } else {
-                        echo json_encode('1');;
+                        echo json_encode(1);;
                     }
                     $cmd = null;
                 } catch (PDOException $e) {
-                    echo $e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage();
+                    echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
                 }
             } else {
-                echo json_encode(print_r($sql->errorInfo()[2]));
+                echo json_encode($sql->errorInfo()[2]);
             }
         } else {
             echo json_encode('No se pudo adjuntar el archivo');
@@ -765,6 +809,77 @@ $app->put('/res/nuevo/contrato_devolver', function (Request $request, Response $
     } catch (PDOException $e) {
         echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
     }
+});
+//nuevo acta designación de supervisor
+$app->put('/res/nuevo/documento/designacion_supervision', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    include $GLOBALS['conexion'];
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    $id_superv = $data["id_superv"];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+        $sql = "SELECT `id_tercero`,`ruta`,`nombre` FROM `seg_supervisor_designado` WHERE `id_supervision` = '$id_superv' ";
+        $rs = $cmd->query($sql);
+        $tercero = $rs->fetch();
+        $id_tercero = $tercero['id_tercero'];
+        $ruta_do = $tercero['ruta'];
+        $nom_doc = $tercero['nombre'];
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+    $rp = [];
+    if ($ruta_do != '' && $nom_doc != '') {
+        $rp = [
+            'estado' => '0',
+            'response' => 'Ya se registró una acta de Designación de supervisor',
+        ];
+    } else {
+        $iduser = $data["iduser"];
+        $tipuser = $data["tipuser"];
+        $nom_archivo = $data["nom_archivo"];
+        $temporal = $data["temporal"];
+        $temporal = base64_decode($temporal);
+        try {
+            $ruta = '../../uploads/terceros/docs/' . $id_tercero . '/';
+            if (!file_exists($ruta)) {
+                $ruta = mkdir('../../uploads/terceros/docs/' . $id_tercero . '/', 0777, true);
+                $ruta = '../../uploads/terceros/docs/' . $id_tercero . '/';
+            }
+            $res = file_put_contents("$ruta/$nom_archivo", $temporal);
+            if (false !== $res) {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+                $sql = "UPDATE `seg_supervisor_designado` SET `ruta` = ?, `nombre` = ?, `id_user_act` = ?, `tipo_user_act` = ?, `fec_act` = ? WHERE `id_supervision` = ?";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $ruta, PDO::PARAM_STR);
+                $sql->bindParam(2, $nom_archivo, PDO::PARAM_STR);
+                $sql->bindParam(3, $iduser, PDO::PARAM_INT);
+                $sql->bindParam(4, $tipuser, PDO::PARAM_STR);
+                $sql->bindValue(5, $date->format('Y-m-d H:i:s'));
+                $sql->bindParam(6, $id_superv, PDO::PARAM_INT);
+                if (!($sql->execute())) {
+                    $rp = [
+                        'estado' => '0',
+                        'response' => $sql->errorInfo()[2],
+                    ];
+                } else {
+                    $rp = [
+                        'estado' => '1',
+                        'response' => '1',
+                    ];
+                }
+            } else {
+                $rp = [
+                    'estado' => '0',
+                    'response' => 'No se pudo adjuntar el archivo',
+                ];
+            }
+        } catch (PDOException $e) {
+            $rp['response'] = ($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+        }
+    }
+    echo json_encode($rp);
 });
 //Descargar documentos
 $app->get('/res/descargar/docs/{id}', function (Request $request, Response $response) {
@@ -896,6 +1011,26 @@ $app->get('/res/listar/docs/{id}', function (Request $request, Response $respons
         echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
     }
 });
+//datos documento soporte de contrato
+$app->get('/res/listar/detalles/docs_contrato/{id}', function (Request $request, Response $response) {
+    $id = $request->getAttribute('id');
+    try {
+        include $GLOBALS['conexion'];
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+        $sql = "SELECT `id_c_env`,`id_tipo_doc`,`otro_tipo`,`ruta_doc_c`,`nom_doc_c` FROM `seg_docs_contrato` WHERE `id_doc_c` = '$id'";
+        $rs = $cmd->query($sql);
+        $docs = $rs->fetch();
+        if (!empty($docs)) {
+            echo json_encode($docs);
+        } else {
+            echo json_encode('0');
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
 //Lista tipo documenos por id de tercero
 $app->get('/res/listar/tipo/docs', function (Request $request, Response $response) {
     try {
@@ -903,6 +1038,24 @@ $app->get('/res/listar/tipo/docs', function (Request $request, Response $respons
         $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
         $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
         $sql = "SELECT * FROM seg_tipo_docs_tercero";
+        $rs = $cmd->query($sql);
+        $tipo = $rs->fetchAll();
+        if (!empty($tipo)) {
+            echo json_encode($tipo);
+        } else {
+            echo json_encode('0');
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+$app->get('/res/listar/tipo/docs_contrato', function (Request $request, Response $response) {
+    try {
+        include $GLOBALS['conexion'];
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+        $sql = "SELECT `id_doc_sop`,`descripcion` FROM `seg_tipo_doc_soporte`";
         $rs = $cmd->query($sql);
         $tipo = $rs->fetchAll();
         if (!empty($tipo)) {
@@ -990,7 +1143,7 @@ $app->put('/res/modificar/documento', function (Request $request, Response $resp
                         $sql->bindParam(4, $iddoc, PDO::PARAM_INT);
                         $sql->execute();
                         if ($sql->rowCount() > 0) {
-                            echo json_encode('1');
+                            echo json_encode(1);
                         } else {
                             echo json_encode($sql->errorInfo()[2]);
                         }
@@ -1035,7 +1188,7 @@ $app->put('/res/modificar/documento', function (Request $request, Response $resp
                     $sql->bindParam(4, $iddoc, PDO::PARAM_INT);
                     $sql->execute();
                     if ($sql->rowCount() > 0) {
-                        echo json_encode('1');
+                        echo json_encode(1);
                     } else {
                         echo json_encode($sql->errorInfo()[2]);
                     }
@@ -1048,6 +1201,151 @@ $app->put('/res/modificar/documento', function (Request $request, Response $resp
             echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
         }
     }
+});
+//PUT Modificar documento soporte de contrato
+$app->put('/res/modificar/documento_soporte', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $iddoc = $data['iddoc'];
+    $idtipdoc = $data['idtipdoc'];
+    $otro = $idtipdoc == 99 ? $data['otro'] : '';
+    $nom_archivo = $data['nom_archivo'];
+    $iduser = $data['iduser'];
+    $tipuser = $data['tipuser'];
+    $temporal = $data['temporal'];
+    $temporal = base64_decode($temporal);
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    $estado_doc = 1;
+    $res = [];
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT `id_doc_c`,`id_c_env`,`id_tipo_doc`,`otro_tipo`,`ruta_doc_c`,`nom_doc_c` FROM `seg_docs_contrato` WHERE `id_doc_c`= '$iddoc'";
+        $rs = $cmd->query($sql);
+        $doc_sop = $rs->fetch();
+        if (!isset($doc_sop)) {
+            $res = [
+                'estado' => 0,
+                'response' => 'Error: ' . $cdm->errorInfo()[2],
+            ];
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($res['response'] = $e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+        exit();
+    }
+    if ($idtipdoc == $doc_sop['id_tipo_doc'] && $temporal == '' && $otro == $doc_sop['otro_tipo']) {
+        $res = [
+            'estado' => 0,
+            'response' => 'No se ha modificado ningún dato',
+        ];
+    } else if ($idtipdoc != $doc_sop['id_tipo_doc'] && $temporal == '') {
+        $renom = explode('_', $doc_sop['nom_doc_c']);
+        $newname = $idtipdoc;
+        $ct = 0;
+        foreach ($renom as $rn) {
+            if ($ct > 0) {
+                $newname .= '_' . $rn;
+            }
+            $ct++;
+        }
+        try {
+            $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+            $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+            $sql = "UPDATE `seg_docs_contrato` SET `id_tipo_doc` = ?, `otro_tipo` = ?, `nom_doc_c` = ?, `id_user_act` = ?, `tipo_user_act` = ? , `fec_act` = ? WHERE `id_doc_c` = ?";
+            $sql = $cmd->prepare($sql);
+            $sql->bindParam(1, $idtipdoc, PDO::PARAM_INT);
+            $sql->bindParam(2, $otro, PDO::PARAM_STR);
+            $sql->bindParam(3, $newname, PDO::PARAM_STR);
+            $sql->bindParam(4, $iduser, PDO::PARAM_INT);
+            $sql->bindParam(5, $tipuser, PDO::PARAM_STR);
+            $sql->bindValue(6, $date->format('Y-m-d H:i:s'));
+            $sql->bindParam(7, $iddoc, PDO::PARAM_INT);
+            $sql->execute();
+            if ($sql->rowCount() > 0) {
+                rename($doc_sop['ruta_doc_c'] . $doc_sop['nom_doc_c'], $doc_sop['ruta_doc_c'] . $newname);
+                $res = [
+                    'estado' => 1,
+                    'response' => 'Tipo de documento modificado correctamente',
+                ];
+            } else {
+                $res = [
+                    'estado' => 0,
+                    'response' => 'Error: ' . $cdm->errorInfo()[2],
+                ];
+            }
+            $cmd = null;
+        } catch (PDOException $e) {
+            echo json_encode($res['response'] = $e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+            exit();
+        }
+    } else if ($temporal != '') {
+        unlink($doc_sop['ruta_doc_c'] . $doc_sop['nom_doc_c']);
+        $nombre = $idtipdoc . '_' . date('YmdGis') . '_' . $nom_archivo;
+        $nombre = strlen($nombre) >= 101 ? substr($nombre, 0, 100) : $nombre;
+        $res = file_put_contents($doc_sop['ruta_doc_c'] . $nombre, $temporal);
+        if (false !== $res) {
+            try {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+                $sql = "UPDATE `seg_docs_contrato` SET `id_tipo_doc` = ?, `otro_tipo` = ?, `nom_doc_c` = ?, `estado` = ?, `id_user_act` = ?, `tipo_user_act` = ? , `fec_act` = ? WHERE `id_doc_c` = ?";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $idtipdoc, PDO::PARAM_INT);
+                $sql->bindParam(2, $otro, PDO::PARAM_STR);
+                $sql->bindParam(3, $nombre, PDO::PARAM_STR);
+                $sql->bindParam(4, $estado_doc, PDO::PARAM_INT);
+                $sql->bindParam(5, $iduser, PDO::PARAM_INT);
+                $sql->bindParam(6, $tipuser, PDO::PARAM_STR);
+                $sql->bindValue(7, $date->format('Y-m-d H:i:s'));
+                $sql->bindParam(8, $iddoc, PDO::PARAM_INT);
+                $sql->execute();
+                if ($sql->rowCount() > 0) {
+                    $res = [
+                        'estado' => 1,
+                        'response' => 'Tipo de documento modificado correctamente',
+                    ];
+                } else {
+                    $res = [
+                        'estado' => 0,
+                        'response' => 'Error: ' . $cdm->errorInfo()[2],
+                    ];
+                }
+                $cmd = null;
+            } catch (PDOException $e) {
+                echo json_encode($res['response'] = $e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+                exit();
+            }
+        }
+    } else if ($otro != $doc_sop['otro_tipo']) {
+        try {
+            $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+            $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+            $sql = "UPDATE `seg_docs_contrato` SET `otro_tipo` = ?, `id_user_act` = ?, `tipo_user_act` = ? , `fec_act` = ? WHERE `id_doc_c` = ?";
+            $sql = $cmd->prepare($sql);
+            $sql->bindParam(1, $otro, PDO::PARAM_STR);
+            $sql->bindParam(2, $iduser, PDO::PARAM_INT);
+            $sql->bindParam(3, $tipuser, PDO::PARAM_STR);
+            $sql->bindValue(4, $date->format('Y-m-d H:i:s'));
+            $sql->bindParam(5, $iddoc, PDO::PARAM_INT);
+            $sql->execute();
+            if ($sql->rowCount() > 0) {
+                $res = [
+                    'estado' => 1,
+                    'response' => 'Tipo de documento modificado correctamente',
+                ];
+            } else {
+                $res = [
+                    'estado' => 0,
+                    'response' => 'Error: ' . $cdm->errorInfo()[2],
+                ];
+            }
+            $cmd = null;
+        } catch (PDOException $e) {
+            echo json_encode($res['response'] = $e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+            exit();
+        }
+    }
+    echo json_encode($res);
 });
 //DELETE  Borrar documento
 $app->delete('/res/eliminar/documento/{id}', function (Request $request, Response $response) {
@@ -1067,7 +1365,33 @@ $app->delete('/res/eliminar/documento/{id}', function (Request $request, Respons
         $sql->execute();
         if ($sql->rowCount() > 0) {
             unlink($ruta);
-            echo json_encode('1');
+            echo json_encode(1);
+        } else {
+            echo json_encode($sql->errorInfo()[2]);
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+//DELETE  Borrar documento soporte  de contrato
+$app->delete('/res/eliminar/documento_soporte_c/{id}', function (Request $request, Response $response) {
+    $idD = $request->getAttribute('id');
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT `id_doc_c`,`id_c_env`,`id_tipo_doc`,`otro_tipo`,`ruta_doc_c`,`nom_doc_c` FROM `seg_docs_contrato` WHERE `id_doc_c` = '$idD'";
+        $rs = $cmd->query($sql);
+        $doc = $rs->fetch();
+        $ruta = $doc['ruta_doc_c'] . $doc['nom_doc_c'];
+        $sql = "DELETE FROM `seg_docs_contrato` WHERE `id_doc_c` = ?";
+        $sql = $cmd->prepare($sql);
+        $sql->bindParam(1, $idD, PDO::PARAM_INT);
+        $sql->execute();
+        if ($sql->rowCount() > 0) {
+            unlink($ruta);
+            echo json_encode(1);
         } else {
             echo json_encode($sql->errorInfo()[2]);
         }
@@ -1088,7 +1412,7 @@ $app->delete('/res/eliminar/resposabilidad/{id}', function (Request $request, Re
         $sql->bindParam(1, $idt, PDO::PARAM_INT);
         $sql->execute();
         if ($sql->rowCount() > 0) {
-            echo json_encode('1');
+            echo json_encode(1);
         } else {
             json_encode($sql->errorInfo()[2]);
         }
@@ -1109,7 +1433,7 @@ $app->delete('/res/eliminar/actividad/{id}', function (Request $request, Respons
         $sql->bindParam(1, $ida, PDO::PARAM_INT);
         $sql->execute();
         if ($sql->rowCount() > 0) {
-            echo json_encode('1');
+            echo json_encode(1);
         } else {
             json_encode($sql->errorInfo()[2]);
         }
@@ -1147,7 +1471,7 @@ $app->put('/res/nuevo/cotizacion', function (Request $request, Response $respons
             $id_terc = $lt;
             $sql->execute();
             if (!($cmd->lastInsertId() > 0)) {
-                echo json_encode(print_r($sql->errorInfo()[2]));
+                echo json_encode($sql->errorInfo()[2]);
             }
         }
         $cmd = null;
@@ -1176,7 +1500,7 @@ $app->put('/res/nuevo/cotizacion', function (Request $request, Response $respons
             $val_estimado = $data[$i]['val_estimado_unid'];
             $sql->execute();
             if (!($cmd->lastInsertId() > 0)) {
-                echo json_encode(print_r($sql->errorInfo()[2]));
+                echo json_encode($sql->errorInfo()[2]);
             }
         }
         if ($i > 1) {
@@ -1391,8 +1715,8 @@ $app->get('/res/detalles/contrato/{id}', function (Request $request, Response $r
                     , `seg_contratos_enviados`.`ruta_contrato`
                     , `seg_contratos_enviados`.`nombre_contrato`
                 FROM
-                    `docs_api`.`seg_contratos_enviados`
-                INNER JOIN `docs_api`.`seg_contratos` 
+                    `seg_contratos_enviados`
+                INNER JOIN `seg_contratos` 
                     ON (`seg_contratos_enviados`.`id_c_rec` = `seg_contratos`.`id_c`)
                 WHERE `seg_contratos_enviados`.`id_c_rec` = '$id'  LIMIT 1";
         $rs = $cmd->query($sql);
@@ -1400,7 +1724,20 @@ $app->get('/res/detalles/contrato/{id}', function (Request $request, Response $r
         if (!empty($det_contrato)) {
             $datos['contrato'] =  $det_contrato;
             $id_cont = $det_contrato['id_c_env'];
-            $sql = "SELECT `id_doc_c`,`id_c_env`,`ruta_doc_c`,`nom_doc_c` FROM `seg_docs_contrato` WHERE `id_c_env` = '$id_cont' ";
+            $sql = "SELECT
+                        `seg_docs_contrato`.`id_doc_c`
+                        , `seg_docs_contrato`.`id_c_env`
+                        , `seg_docs_contrato`.`id_tipo_doc`
+                        , `seg_tipo_doc_soporte`.`descripcion`
+                        , `seg_docs_contrato`.`otro_tipo`
+                        , `seg_docs_contrato`.`ruta_doc_c`
+                        , `seg_docs_contrato`.`nom_doc_c`
+                        , `seg_docs_contrato`.`estado`
+                    FROM
+                        `seg_docs_contrato`
+                    INNER JOIN `seg_tipo_doc_soporte` 
+                        ON (`seg_docs_contrato`.`id_tipo_doc` = `seg_tipo_doc_soporte`.`id_doc_sop`) 
+                    WHERE `seg_docs_contrato`.`id_c_env` = '$id_cont' ";
             $rs = $cmd->query($sql);
             $docs_contrato = $rs->fetchAll();
             $datos['docs'] = $docs_contrato;
@@ -1436,7 +1773,7 @@ $app->put('/res/nuevo/cotizacion/valores', function (Request $request, Response 
                 $valor = $data[$key];
                 $sql->execute();
                 if (!($cmd->lastInsertId() > 0)) {
-                    echo json_encode(print_r($cmd->errorInfo()[2]));
+                    echo json_encode($cmd->errorInfo()[2]);
                 } else {
                     $i++;
                 }
@@ -1543,10 +1880,10 @@ $app->delete('/res/listar/bajar_cotizacion/{id}', function (Request $request, Re
                         if ($sql->rowCount() > 0) {
                             echo json_encode(1);
                         } else {
-                            echo json_encode(print_r($cmd->errorInfo()[2]));
+                            echo json_encode($cmd->errorInfo()[2]);
                         }
                     } else {
-                        echo json_encode(print_r($cmd->errorInfo()[2]));
+                        echo json_encode($cmd->errorInfo()[2]);
                     }
                     $cmd = null;
                 } catch (PDOException $e) {
@@ -1556,7 +1893,7 @@ $app->delete('/res/listar/bajar_cotizacion/{id}', function (Request $request, Re
                 echo json_encode('No se puede bajar, un tercero replicó esta cotización');
             }
         } else {
-            echo json_encode(print_r($cmd->errorInfo()[2]));
+            echo json_encode($cmd->errorInfo()[2]);
         }
         $cmd = null;
     } catch (PDOException $e) {
@@ -1625,7 +1962,7 @@ $app->get('/res/listar/cot_recibidas/{id}', function (Request $request, Response
         if (isset($tercer_recibe)) {
             echo json_encode($tercer_recibe);
         } else {
-            echo json_encode(print_r($cmd->errorInfo()[2]));
+            echo json_encode($cmd->errorInfo()[2]);
         }
         $cmd = null;
     } catch (PDOException $e) {
@@ -1664,8 +2001,1375 @@ $app->get('/res/listar/datos_cotiz_recibidas/{id}', function (Request $request, 
         if (isset($valores_cotiza)) {
             echo json_encode($valores_cotiza);
         } else {
-            echo json_encode(print_r($cmd->errorInfo()[2]));
+            echo json_encode($cmd->errorInfo()[2]);
         }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+
+//PUT Nuevo Documento soporte de contrato
+$app->put('/res/nuevo/doc_soporte_contrato', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id_cd = $data["id_cd"];
+    $tipodoc = $data["tipodoc"];
+    $tipodoc_otro = $data["otro"];
+    $iduser = $data["iduser"];
+    $tipuser = $data["tipuser"];
+    $nom_archivo = $data["nom_archivo"];
+    $temporal = $data["temporal"];
+    $temporal = base64_decode($temporal);
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT`id_c_env` FROM `seg_contratos_enviados` WHERE `id_c_rec` = '$id_cd' LIMIT 1";
+        $rs = $cmd->query($sql);
+        $id_cdev = $rs->fetch();
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+    $id_cfinal = $id_cdev['id_c_env'];
+    if ($id_cfinal != '') {
+        try {
+            $ruta = '../../uploads/terceros/docs/' . $iduser . '/';
+            if (!file_exists($ruta)) {
+                $ruta = mkdir('../../uploads/terceros/docs/' . $iduser . '/', 0777, true);
+                $ruta = '../../uploads/terceros/docs/' . $iduser . '/';
+            }
+            $res = file_put_contents("$ruta/$nom_archivo", $temporal);
+            if (false !== $res) {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+                $sql = "INSERT INTO `seg_docs_contrato`(`id_c_env`,`id_tipo_doc`,`otro_tipo`,`ruta_doc_c`,`nom_doc_c`,`id_user_reg`,`tipo_user_reg`,`fec_reg`)
+                    VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $id_cfinal, PDO::PARAM_INT);
+                $sql->bindParam(2, $tipodoc, PDO::PARAM_INT);
+                $sql->bindParam(3, $tipodoc_otro, PDO::PARAM_STR);
+                $sql->bindParam(4, $ruta, PDO::PARAM_STR);
+                $sql->bindParam(5, $nom_archivo, PDO::PARAM_STR);
+                $sql->bindParam(6, $iduser, PDO::PARAM_INT);
+                $sql->bindParam(7, $tipuser, PDO::PARAM_STR);
+                $sql->bindValue(8, $date->format('Y-m-d H:i:s'));
+                $sql->execute();
+                if ($cmd->lastInsertId() > 0) {
+                    if ($tipodoc == '98') {
+                        $estado = 2;
+                        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+                        $sql = "UPDATE `seg_supervisor_designado` SET `estado` = ?, `id_user_act` = ?, `tipo_user_act` = ?, `fec_act` = ? WHERE `id_contrato` = ?";
+                        $sql = $cmd->prepare($sql);
+                        $sql->bindParam(1, $estado, PDO::PARAM_INT);
+                        $sql->bindParam(2, $iduser, PDO::PARAM_INT);
+                        $sql->bindParam(3, $tipuser, PDO::PARAM_STR);
+                        $sql->bindValue(4, $date->format('Y-m-d H:i:s'));
+                        $sql->bindParam(5, $id_cfinal, PDO::PARAM_INT);
+                        if (!($sql->execute())) {
+                            echo json_encode($cdm->errorInfo()[2]);
+                        }
+                    }
+                    echo json_encode(1);
+                } else {
+                    echo json_encode($sql->errorInfo()[2]);
+                }
+            } else {
+                echo json_encode('No se pudo adjuntar el archivo');
+            }
+        } catch (PDOException $e) {
+            echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+        }
+    } else {
+        echo json_encode('No se pudo adjuntar el archivo: no id');
+    }
+});
+//listar tipos de novedad contratacion
+$app->get('/res/listar/tipo_novedad', function (Request $request, Response $response) {
+    try {
+        include $GLOBALS['conexion'];
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+        $sql = "SELECT `id_novedad`,`descripcion` FROM `seg_tipo_novedad_contrato` WHERE `id_novedad` BETWEEN '1' AND '3'";
+        $rs = $cmd->query($sql);
+        $tip_novedad = $rs->fetchAll();
+        if (!empty($tip_novedad)) {
+            echo json_encode($tip_novedad);
+        } else {
+            echo json_encode('0');
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+//PUT registar novedad -> adicion o prorroga.
+$app->put('/res/nuevo/novedad/adicion_prorroga', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id_contrato = $data['id_contrato'];
+    $tip_novedad = $data['tip_novedad'];
+    $val_adicion = $data['val_adicion'];
+    $fec_adicion = $data['fec_adicion'];
+    $cdp = $data['cdp'];
+    $fini_pro = $data['fini_pro'];
+    $ffin_pro = $data['ffin_pro'];
+    $observacion = $data['observacion'];
+    $iduser = $data['iduser'];
+    $tipouser = $data['tipouser'];
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT`id_c_env` FROM `seg_contratos_enviados` WHERE `id_c_rec` = '$id_contrato' LIMIT 1";
+        $rs = $cmd->query($sql);
+        $id_cdev = $rs->fetch();
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+    $id_cfinal = $id_cdev['id_c_env'];
+    if ($id_cfinal != '') {
+        try {
+            $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+            $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+            $sql = "INSERT INTO `seg_novedad_contrato_adi_pror`(`id_tip_nov`,`id_contrato`,`val_adicion`,`fec_adcion`,`cdp`,`fec_ini_prorroga`,`fec_fin_prorroga`,`observacion`,`id_user_reg`,`tipo_user_reg`,`fec_reg`)
+                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sql = $cmd->prepare($sql);
+            $sql->bindParam(1, $tip_novedad, PDO::PARAM_INT);
+            $sql->bindParam(2, $id_cfinal, PDO::PARAM_INT);
+            $sql->bindParam(3, $val_adicion, PDO::PARAM_STR);
+            $sql->bindParam(4, $fec_adicion, PDO::PARAM_STR);
+            $sql->bindParam(5, $cdp, PDO::PARAM_INT);
+            $sql->bindParam(6, $fini_pro, PDO::PARAM_STR);
+            $sql->bindParam(7, $ffin_pro, PDO::PARAM_STR);
+            $sql->bindParam(8, $observacion, PDO::PARAM_STR);
+            $sql->bindParam(9, $iduser, PDO::PARAM_INT);
+            $sql->bindParam(10, $tipouser, PDO::PARAM_STR);
+            $sql->bindValue(11, $date->format('Y-m-d H:i:s'));
+            $sql->execute();
+            if ($cmd->lastInsertId() > 0) {
+                echo json_encode(1);
+            } else {
+                echo json_encode($sql->errorInfo()[2]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+        }
+    } else {
+        echo json_encode('No se encontró contrato');
+    }
+});
+//PUT registar novedad -> cesion.
+$app->put('/res/nuevo/novedad/cesion', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id_contrato = $data['id_contrato'];
+    $tip_nov = $data['tip_nov'];
+    $fec_cesion = $data['fec_cesion'];
+    $id_tercero = $data['id_tercero'];
+    $observacion = $data['observacion'];
+    $iduser = $data['iduser'];
+    $tipouser = $data['tipouser'];
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT
+        `seg_contratos`.`id_tercero`
+        , `seg_contratos_enviados`.`id_c_env`
+    FROM
+        `seg_contratos_enviados`
+        INNER JOIN `seg_contratos` 
+            ON (`seg_contratos_enviados`.`id_c_rec` = `seg_contratos`.`id_c`)
+            WHERE `seg_contratos_enviados`.`id_c_rec` = '$id_contrato' LIMIT 1";
+        $rs = $cmd->query($sql);
+        $id_cdev = $rs->fetch();
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+    $id_cfinal = $id_cdev['id_c_env'];
+    $iD_terc = $id_cdev['id_tercero'];
+    if ($iD_terc == $id_tercero) {
+        echo json_encode('Tercero cesionario no puede ser él mismo');
+        exit();
+    } else if ($id_cfinal != '') {
+        try {
+            $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+            $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+            $sql = "INSERT INTO `seg_novedad_contrato_cesion`(`id_contrato`,`id_tipo_nov`,`id_tercero`,`fec_cesion`,`observacion`,`id_user_reg`,`tipo_user_reg`,`fec_reg`)
+                    VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
+            $sql = $cmd->prepare($sql);
+            $sql->bindParam(1, $id_cfinal, PDO::PARAM_INT);
+            $sql->bindParam(2, $tip_nov, PDO::PARAM_INT);
+            $sql->bindParam(3, $id_tercero, PDO::PARAM_INT);
+            $sql->bindParam(4, $fec_cesion, PDO::PARAM_STR);
+            $sql->bindParam(5, $observacion, PDO::PARAM_STR);
+            $sql->bindParam(6, $iduser, PDO::PARAM_INT);
+            $sql->bindParam(7, $tipouser, PDO::PARAM_STR);
+            $sql->bindValue(8, $date->format('Y-m-d H:i:s'));
+            $sql->execute();
+            if ($cmd->lastInsertId() > 0) {
+                echo json_encode(1);
+            } else {
+                echo json_encode($sql->errorInfo()[2]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+        }
+    } else {
+        echo json_encode('No se encontró contrato');
+    }
+});
+//PUT registar novedad -> suspensión.
+$app->put('/res/nuevo/novedad/suspension', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id_contrato = $data['id_contrato'];
+    $tip_nov = $data['tip_nov'];
+    $fini_susp = $data['fini_susp'];
+    $ffin_susp = $data['ffin_susp'];
+    $observacion = $data['observacion'];
+    $iduser = $data['iduser'];
+    $tipouser = $data['tipouser'];
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT`id_c_env` FROM `seg_contratos_enviados` WHERE `id_c_rec` = '$id_contrato' LIMIT 1";
+        $rs = $cmd->query($sql);
+        $id_cdev = $rs->fetch();
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+    $id_cfinal = $id_cdev['id_c_env'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT `id_suspension`,`id_contrato`,`id_tipo_nov`,`fec_inicia`,`fec_fin` FROM `seg_novedad_contrato_suspension` WHERE `id_contrato` = '$id_cfinal'  ORDER BY `fec_fin` DESC LIMIT 1";
+        $rs = $cmd->query($sql);
+        $suspensiones = $rs->fetch();
+        if ($suspensiones['fec_fin'] != '' && $suspensiones['fec_fin'] >= $fini_susp) {
+            echo json_encode('Fecha inicial de la nueva suspensión debe ser mayor a la fecha final de la última suspensión: ' . $suspensiones['fec_fin']);
+            exit();
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+    if ($id_cfinal != '') {
+        try {
+            $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+            $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+            $sql = "INSERT INTO `seg_novedad_contrato_suspension`(`id_contrato`,`id_tipo_nov`,`fec_inicia`,`fec_fin`,`observacion`,`id_user_reg`,`tipo_user_reg`,`fec_reg`)
+                    VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
+            $sql = $cmd->prepare($sql);
+            $sql->bindParam(1, $id_cfinal, PDO::PARAM_INT);
+            $sql->bindParam(2, $tip_nov, PDO::PARAM_INT);
+            $sql->bindParam(3, $fini_susp, PDO::PARAM_STR);
+            $sql->bindParam(4, $ffin_susp, PDO::PARAM_STR);
+            $sql->bindParam(5, $observacion, PDO::PARAM_STR);
+            $sql->bindParam(6, $iduser, PDO::PARAM_INT);
+            $sql->bindParam(7, $tipouser, PDO::PARAM_STR);
+            $sql->bindValue(8, $date->format('Y-m-d H:i:s'));
+            $sql->execute();
+            if ($cmd->lastInsertId() > 0) {
+                echo json_encode(1);
+            } else {
+                echo json_encode($sql->errorInfo()[2]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+        }
+    } else {
+        echo json_encode('No se encontró contrato');
+    }
+});
+//GET Consultar suspension de contrato por id de contrato
+$app->get('/res/listar/suspension/{id}', function (Request $request, Response $response) {
+    $id_contrato = $request->getAttribute('id');
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT`id_c_env` FROM `seg_contratos_enviados` WHERE `id_c_rec` = '$id_contrato' LIMIT 1";
+        $rs = $cmd->query($sql);
+        $id_cdev = $rs->fetch();
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+    $id_cfinal = $id_cdev['id_c_env'];
+    if ($id_cfinal != '') {
+        try {
+            $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+            $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+            $sql = "SELECT `id_suspension`,`id_contrato`,`id_tipo_nov`,`fec_inicia`,`fec_fin` FROM `seg_novedad_contrato_suspension` WHERE `id_contrato` = '$id_cfinal'  ORDER BY `fec_fin` DESC LIMIT 1";
+            $rs = $cmd->query($sql);
+            $suspensiones = $rs->fetch();
+            if (isset($suspensiones)) {
+                echo json_encode($suspensiones);
+            } else {
+                echo json_encode($cmd->errorInfo()[2]);
+            }
+            $cmd = null;
+        } catch (PDOException $e) {
+            echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+        }
+    } else {
+        echo json_encode('Datos de contrato no disponible');
+    }
+});
+//GET Consultar suspension de contrato por id reinicio
+$app->get('/res/listar/suspension2/{id}', function (Request $request, Response $response) {
+    $id_sus = $request->getAttribute('id');
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT `id_suspension` FROM `seg_novedad_contrato_reinicio` WHERE `id_reinicio` = '$id_sus' LIMIT 1";
+        $rs = $cmd->query($sql);
+        $id_cdev = $rs->fetch();
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+    $id_s = $id_cdev['id_suspension'];
+    if ($id_s != '') {
+        try {
+            $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+            $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+            $sql = "SELECT `id_suspension`,`id_contrato`,`id_tipo_nov`,`fec_inicia`,`fec_fin` FROM `seg_novedad_contrato_suspension` WHERE `id_suspension` = '$id_s'  ORDER BY `fec_fin` DESC LIMIT 1";
+            $rs = $cmd->query($sql);
+            $suspensiones = $rs->fetch();
+            if (isset($suspensiones)) {
+                echo json_encode($suspensiones);
+            } else {
+                echo json_encode($cmd->errorInfo()[2]);
+            }
+            $cmd = null;
+        } catch (PDOException $e) {
+            echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+        }
+    } else {
+        echo json_encode('Datos de contrato no disponible');
+    }
+});
+//PUT registar novedad -> reinicio.
+$app->put('/res/nuevo/novedad/reinicio', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id_contrato = $data['id_contrato'];
+    $tip_nov = $data['tip_nov'];
+    $frein = $data['frein'];
+    $id_suspension = $data['id_suspension'];
+    $observacion = $data['observacion'];
+    $iduser = $data['iduser'];
+    $tipouser = $data['tipouser'];
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT`id_c_env` FROM `seg_contratos_enviados` WHERE `id_c_rec` = '$id_contrato' LIMIT 1";
+        $rs = $cmd->query($sql);
+        $id_cdev = $rs->fetch();
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+    $id_cfinal = $id_cdev['id_c_env'];
+    if ($id_cfinal != '') {
+        try {
+            $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+            $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+            $sql = "INSERT INTO `seg_novedad_contrato_reinicio`(`id_tipo_nov`,`id_suspension`,`fec_reinicia`,`observacion`,`id_user_reg`,`tipo_user_reg`,`fec_reg`)
+                    VALUES(?, ?, ?, ?, ?, ?, ?)";
+            $sql = $cmd->prepare($sql);
+            $sql->bindParam(1, $tip_nov, PDO::PARAM_INT);
+            $sql->bindParam(2, $id_suspension, PDO::PARAM_INT);
+            $sql->bindParam(3, $frein, PDO::PARAM_STR);
+            $sql->bindParam(4, $observacion, PDO::PARAM_STR);
+            $sql->bindParam(5, $iduser, PDO::PARAM_INT);
+            $sql->bindParam(6, $tipouser, PDO::PARAM_STR);
+            $sql->bindValue(7, $date->format('Y-m-d H:i:s'));
+            $sql->execute();
+            if ($cmd->lastInsertId() > 0) {
+                echo json_encode(1);
+            } else {
+                echo json_encode($sql->errorInfo()[2]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+        }
+    } else {
+        echo json_encode('No se encontró contrato');
+    }
+});
+//GET Consultar tipos de terminacion de contrato
+$app->get('/res/listar/tipos_terminacion_contrato', function (Request $request, Response $response) {
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT `id_tipo_term`,`descripcion` FROM `seg_tipo_terminacion_contrato`";
+        $rs = $cmd->query($sql);
+        $t_terminacion = $rs->fetchAll();
+        if (isset($t_terminacion)) {
+            echo json_encode($t_terminacion);
+        } else {
+            echo json_encode($cmd->errorInfo()[2]);
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+//PUT registar novedad -> terminacion.
+$app->put('/res/nuevo/novedad/terminacion', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id_contrato = $data['id_contrato'];
+    $tip_nov = $data['tip_nov'];
+    $id_tt = $data['id_tt'];
+    $observacion = $data['observacion'];
+    $iduser = $data['iduser'];
+    $tipouser = $data['tipouser'];
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT`id_c_env` FROM `seg_contratos_enviados` WHERE `id_c_rec` = '$id_contrato' LIMIT 1";
+        $rs = $cmd->query($sql);
+        $id_cdev = $rs->fetch();
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+    $id_cfinal = $id_cdev['id_c_env'];
+    if ($id_cfinal != '') {
+        try {
+            $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+            $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+            $sql = "INSERT INTO `seg_novedad_contrato_terminacion`(`id_tipo_nov`,`id_t_terminacion`,`id_contrato`,`observacion`,`id_user_reg`,`tipo_user_reg`,`fec_reg`)
+                    VALUES(?, ?, ?, ?, ?, ?, ?)";
+            $sql = $cmd->prepare($sql);
+            $sql->bindParam(1, $tip_nov, PDO::PARAM_INT);
+            $sql->bindParam(2, $id_tt, PDO::PARAM_INT);
+            $sql->bindParam(3, $id_cfinal, PDO::PARAM_STR);
+            $sql->bindParam(4, $observacion, PDO::PARAM_STR);
+            $sql->bindParam(5, $iduser, PDO::PARAM_INT);
+            $sql->bindParam(6, $tipouser, PDO::PARAM_STR);
+            $sql->bindValue(7, $date->format('Y-m-d H:i:s'));
+            $sql->execute();
+            if ($cmd->lastInsertId() > 0) {
+                echo json_encode(1);
+            } else {
+                echo json_encode($sql->errorInfo()[2]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+        }
+    } else {
+        echo json_encode('No se encontró contrato');
+    }
+});
+//PUT registar novedad -> liquidación.
+$app->put('/res/nuevo/novedad/liquidacion', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id_contrato = $data['id_contrato'];
+    $tip_nov = $data['tip_nov'];
+    $fec_liq = $data['fec_liq'];
+    $tip_liq = $data['tip_liq'];
+    $val_ctte = $data['val_ctte'];
+    $val_ctta = $data['val_ctta'];
+    $observacion = $data['observacion'];
+    $iduser = $data['iduser'];
+    $tipouser = $data['tipouser'];
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT`id_c_env` FROM `seg_contratos_enviados` WHERE `id_c_rec` = '$id_contrato' LIMIT 1";
+        $rs = $cmd->query($sql);
+        $id_cdev = $rs->fetch();
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+    $id_cfinal = $id_cdev['id_c_env'];
+    if ($id_cfinal != '') {
+        try {
+            $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+            $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+            $sql = "INSERT INTO `seg_novedad_contrato_liquidacion`(`id_tipo_nov`,`id_t_liq`,`id_contrato`,`fec_liq`,`val_cte`,`val_cta`,`observacion`,`id_user_reg`,`tipo_user_reg`,`fec_reg`)
+                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sql = $cmd->prepare($sql);
+            $sql->bindParam(1, $tip_nov, PDO::PARAM_INT);
+            $sql->bindParam(2, $tip_liq, PDO::PARAM_INT);
+            $sql->bindParam(3, $id_cfinal, PDO::PARAM_INT);
+            $sql->bindParam(4, $fec_liq, PDO::PARAM_STR);
+            $sql->bindParam(5, $val_ctte, PDO::PARAM_STR);
+            $sql->bindParam(6, $val_ctta, PDO::PARAM_STR);
+            $sql->bindParam(7, $observacion, PDO::PARAM_STR);
+            $sql->bindParam(8, $iduser, PDO::PARAM_INT);
+            $sql->bindParam(9, $tipouser, PDO::PARAM_STR);
+            $sql->bindValue(10, $date->format('Y-m-d H:i:s'));
+            $sql->execute();
+            if ($cmd->lastInsertId() > 0) {
+                echo json_encode(1);
+            } else {
+                echo json_encode($sql->errorInfo()[2]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+        }
+    } else {
+        echo json_encode('No se encontró contrato');
+    }
+});
+
+//GET Consultar novedades de contrato
+$app->get('/res/listar/novedades_contrato/{id}', function (Request $request, Response $response) {
+    $id_contrato = $request->getAttribute('id');
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT`id_c_env` FROM `seg_contratos_enviados` WHERE `id_c_rec` = '$id_contrato' LIMIT 1";
+        $rs = $cmd->query($sql);
+        $id_cdev = $rs->fetch();
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+    $id_cfinal = $id_cdev['id_c_env'];
+
+    $list_nov = [];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT
+                    `seg_novedad_contrato_adi_pror`.`id_nov_con`
+                    , `seg_novedad_contrato_adi_pror`.`id_tip_nov`
+                    , `seg_tipo_novedad_contrato`.`descripcion`
+                    , `seg_novedad_contrato_adi_pror`.`val_adicion`
+                    , `seg_novedad_contrato_adi_pror`.`fec_adcion`
+                    , `seg_novedad_contrato_adi_pror`.`cdp`
+                    , `seg_novedad_contrato_adi_pror`.`fec_ini_prorroga`
+                    , `seg_novedad_contrato_adi_pror`.`fec_fin_prorroga`
+                    , `seg_novedad_contrato_adi_pror`.`observacion`
+                FROM
+                    `seg_novedad_contrato_adi_pror`
+                    INNER JOIN `seg_tipo_novedad_contrato` 
+                        ON (`seg_novedad_contrato_adi_pror`.`id_tip_nov` = `seg_tipo_novedad_contrato`.`id_novedad`)
+                WHERE `seg_novedad_contrato_adi_pror`.`id_contrato` = '$id_cfinal'";
+        $rs = $cmd->query($sql);
+        $nov_adpro = $rs->fetchAll();
+        if (isset($nov_adpro)) {
+            $list_nov['adicion_prorroga'] = $nov_adpro;
+        } else {
+            echo json_encode($cmd->errorInfo()[2]);
+        }
+        $sql = "SELECT
+                    `seg_novedad_contrato_cesion`.`id_cesion`
+                    , `seg_tipo_novedad_contrato`.`descripcion`
+                    , `seg_novedad_contrato_cesion`.`id_tipo_nov`
+                    , `seg_novedad_contrato_cesion`.`id_tercero`
+                    , `seg_terceros`.`cc_nit`
+                    , `seg_terceros`.`apellido1`
+                    , `seg_terceros`.`apellido2`
+                    , `seg_terceros`.`nombre1`
+                    , `seg_terceros`.`nombre2`
+                    , `seg_terceros`.`razon_social`
+                    , `seg_novedad_contrato_cesion`.`fec_cesion`
+                    , `seg_novedad_contrato_cesion`.`observacion`
+                FROM
+                    `seg_novedad_contrato_cesion`
+                    INNER JOIN `seg_tipo_novedad_contrato` 
+                        ON (`seg_novedad_contrato_cesion`.`id_tipo_nov` = `seg_tipo_novedad_contrato`.`id_novedad`)
+                    INNER JOIN `seg_terceros` 
+                        ON (`seg_novedad_contrato_cesion`.`id_tercero` = `seg_terceros`.`id_tercero`)
+                WHERE `seg_novedad_contrato_cesion`.`id_contrato` = '$id_cfinal'";
+        $rs = $cmd->query($sql);
+        $nov_cesion = $rs->fetchAll();
+        if (isset($nov_cesion)) {
+            $list_nov['cesion'] = $nov_cesion;
+        } else {
+            echo json_encode($cmd->errorInfo()[2]);
+        }
+        $sql = "SELECT
+                    `seg_novedad_contrato_suspension`.`id_suspension`
+                    , `seg_novedad_contrato_suspension`.`id_tipo_nov`
+                    , `seg_tipo_novedad_contrato`.`descripcion`
+                    , `seg_novedad_contrato_suspension`.`fec_inicia`
+                    , `seg_novedad_contrato_suspension`.`fec_fin`
+                    , `seg_novedad_contrato_suspension`.`observacion`
+                FROM
+                    `seg_novedad_contrato_suspension`
+                    INNER JOIN `seg_tipo_novedad_contrato` 
+                        ON (`seg_novedad_contrato_suspension`.`id_tipo_nov` = `seg_tipo_novedad_contrato`.`id_novedad`)
+                WHERE `seg_novedad_contrato_suspension`.`id_contrato` = '$id_cfinal' ORDER BY `seg_novedad_contrato_suspension`.`fec_fin` DESC";
+        $rs = $cmd->query($sql);
+        $nov_suspension = $rs->fetchAll();
+        if (isset($nov_suspension)) {
+            $list_nov['suspension'] = $nov_suspension;
+        } else {
+            echo json_encode($cmd->errorInfo()[2]);
+        }
+        $sql = "SELECT
+                    `seg_novedad_contrato_reinicio`.`id_reinicio`
+                    , `seg_novedad_contrato_reinicio`.`id_tipo_nov`
+                    , `seg_tipo_novedad_contrato`.`descripcion`
+                    , `seg_novedad_contrato_reinicio`.`id_suspension`
+                    , `seg_novedad_contrato_reinicio`.`fec_reinicia`
+                    , `seg_novedad_contrato_reinicio`.`observacion`
+                FROM
+                    `seg_novedad_contrato_reinicio`
+                    INNER JOIN `seg_tipo_novedad_contrato` 
+                        ON (`seg_novedad_contrato_reinicio`.`id_tipo_nov` = `seg_tipo_novedad_contrato`.`id_novedad`)
+                    INNER JOIN `seg_novedad_contrato_suspension` 
+                        ON (`seg_novedad_contrato_reinicio`.`id_suspension` = `seg_novedad_contrato_suspension`.`id_suspension`)
+                WHERE `seg_novedad_contrato_suspension`.`id_contrato` = '$id_cfinal' ORDER BY `seg_novedad_contrato_reinicio`.`fec_reinicia` DESC";
+        $rs = $cmd->query($sql);
+        $nov_reinicio = $rs->fetchAll();
+        if (isset($nov_reinicio)) {
+            $list_nov['reinicio'] = $nov_reinicio;
+        } else {
+            echo json_encode($cmd->errorInfo()[2]);
+        }
+        $sql = "SELECT
+                    `seg_novedad_contrato_terminacion`.`id_terminacion`
+                    , `seg_novedad_contrato_terminacion`.`id_tipo_nov`
+                    , `seg_tipo_novedad_contrato`.`descripcion` 
+                    , `seg_novedad_contrato_terminacion`.`id_t_terminacion`
+                    , `seg_tipo_terminacion_contrato`.`descripcion`as `desc_ter`
+                    , `seg_novedad_contrato_terminacion`.`observacion`
+                FROM
+                    `seg_novedad_contrato_terminacion`
+                    INNER JOIN `seg_tipo_novedad_contrato` 
+                        ON (`seg_novedad_contrato_terminacion`.`id_tipo_nov` = `seg_tipo_novedad_contrato`.`id_novedad`)
+                    INNER JOIN `seg_tipo_terminacion_contrato` 
+                        ON (`seg_novedad_contrato_terminacion`.`id_t_terminacion` = `seg_tipo_terminacion_contrato`.`id_tipo_term`)
+                WHERE `seg_novedad_contrato_terminacion`.`id_contrato` = '$id_cfinal'";
+        $rs = $cmd->query($sql);
+        $nov_terminacion = $rs->fetchAll();
+        if (isset($nov_terminacion)) {
+            $list_nov['terminacion'] = $nov_terminacion;
+        } else {
+            echo json_encode($cmd->errorInfo()[2]);
+        }
+        $sql = "SELECT
+                    `seg_novedad_contrato_liquidacion`.`id_liquidacion`
+                    , `seg_novedad_contrato_liquidacion`.`id_tipo_nov`
+                    , `seg_novedad_contrato_liquidacion`.`id_t_liq`
+                    , `seg_tipo_novedad_contrato`.`descripcion`
+                    , `seg_novedad_contrato_liquidacion`.`fec_liq`
+                    , `seg_novedad_contrato_liquidacion`.`val_cte`
+                    , `seg_novedad_contrato_liquidacion`.`val_cta`
+                    , `seg_novedad_contrato_liquidacion`.`observacion`
+                FROM
+                    `seg_novedad_contrato_liquidacion`
+                    INNER JOIN `seg_tipo_novedad_contrato` 
+                        ON (`seg_novedad_contrato_liquidacion`.`id_tipo_nov` = `seg_tipo_novedad_contrato`.`id_novedad`)
+                WHERE `seg_novedad_contrato_liquidacion`.`id_contrato` = '$id_cfinal'";
+        $rs = $cmd->query($sql);
+        $nov_liquidacion = $rs->fetchAll();
+        if (isset($nov_liquidacion)) {
+            $list_nov['liquidacion'] = $nov_liquidacion;
+        } else {
+            echo json_encode($cmd->errorInfo()[2]);
+        }
+        echo json_encode($list_nov);
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+//DELETE novedad de contrato
+$app->delete('/res/eliminar/novedad/{id}', function (Request $request, Response $response) {
+    $datos = explode('|', $request->getAttribute('id'));
+    include $GLOBALS['conexion'];
+    $id_nov = $datos[0];
+    $novedad = $datos[1];
+    $resp = 0;
+    switch ($novedad) {
+        case '1':
+        case '2':
+        case '3':
+            try {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+                $sql = "DELETE FROM `seg_novedad_contrato_adi_pror` WHERE `id_nov_con` = ?";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $id_nov, PDO::PARAM_INT);
+                $sql->execute();
+                if ($sql->rowCount() > 0) {
+                    $resp = 1;
+                } else {
+                    echo json_encode($sql->errorInfo()[2]);
+                }
+                $cmd = null;
+            } catch (PDOException $e) {
+                echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+            }
+            break;
+        case '4':
+            try {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+                $sql = "DELETE FROM `seg_novedad_contrato_cesion` WHERE `id_cesion` = ?";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $id_nov, PDO::PARAM_INT);
+                $sql->execute();
+                if ($sql->rowCount() > 0) {
+                    $resp = 1;
+                } else {
+                    echo json_encode($sql->errorInfo()[2]);
+                }
+                $cmd = null;
+            } catch (PDOException $e) {
+                echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+            }
+            break;
+        case '5':
+            try {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+                $sql = "DELETE FROM `seg_novedad_contrato_suspension` WHERE `id_suspension` = ?";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $id_nov, PDO::PARAM_INT);
+                $sql->execute();
+                if ($sql->rowCount() > 0) {
+                    $resp = 1;
+                } else {
+                    echo json_encode($sql->errorInfo()[2]);
+                }
+                $cmd = null;
+            } catch (PDOException $e) {
+                echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+            }
+            break;
+        case '6':
+            try {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+                $sql = "DELETE FROM `seg_novedad_contrato_reinicio` WHERE `id_reinicio` = ?";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $id_nov, PDO::PARAM_INT);
+                $sql->execute();
+                if ($sql->rowCount() > 0) {
+                    $resp = 1;
+                } else {
+                    echo json_encode($sql->errorInfo()[2]);
+                }
+                $cmd = null;
+            } catch (PDOException $e) {
+                echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+            }
+            break;
+        case '7':
+            try {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+                $sql = "DELETE FROM `seg_novedad_contrato_terminacion` WHERE `id_terminacion` = ?";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $id_nov, PDO::PARAM_INT);
+                $sql->execute();
+                if ($sql->rowCount() > 0) {
+                    $resp = 1;
+                } else {
+                    echo json_encode($sql->errorInfo()[2]);
+                }
+                $cmd = null;
+            } catch (PDOException $e) {
+                echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+            }
+            break;
+        case '8':
+            try {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+                $sql = "DELETE FROM `seg_novedad_contrato_liquidacion` WHERE `id_liquidacion` = ?";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $id_nov, PDO::PARAM_INT);
+                $sql->execute();
+                if ($sql->rowCount() > 0) {
+                    $resp = 1;
+                } else {
+                    echo json_encode($sql->errorInfo()[2]);
+                }
+                $cmd = null;
+            } catch (PDOException $e) {
+                echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+            }
+            break;
+    }
+    echo json_encode($resp);
+});
+//listar detalles de novedad contratacion
+$app->get('/res/listar/detalles_novedad/{id}', function (Request $request, Response $response) {
+    $datos = explode('|', $request->getAttribute('id'));
+    $id_novedad = $datos[0];
+    $opcion = $datos[1];
+    include $GLOBALS['conexion'];
+    switch ($opcion) {
+        case 1:
+        case 2:
+        case 3:
+            try {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+                $sql = "SELECT 
+                            `id_nov_con`, `id_tip_nov`, `id_contrato`, `val_adicion`, `fec_adcion`, `cdp`, `fec_ini_prorroga`, `fec_fin_prorroga`, `observacion`
+                        FROM
+                            `seg_novedad_contrato_adi_pror`
+                        WHERE `id_nov_con` = '$id_novedad'";
+                $rs = $cmd->query($sql);
+                $detalles = $rs->fetch();
+                $response = isset($detalles) ? $detalles : $cmd->errorInfo()[2];
+                $cmd = null;
+            } catch (PDOException $e) {
+                $response = $e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage();
+            }
+            break;
+        case 4:
+            try {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+                $sql = "SELECT
+                            `id_cesion`,`id_contrato`, `id_tipo_nov`, `id_tercero`, `fec_cesion`, `observacion`
+                        FROM
+                            `seg_novedad_contrato_cesion`
+                        WHERE `id_cesion` = '$id_novedad'";
+                $rs = $cmd->query($sql);
+                $detalles = $rs->fetch();
+                $response = isset($detalles) ? $detalles : $cmd->errorInfo()[2];
+                $cmd = null;
+            } catch (PDOException $e) {
+                $response = $e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage();
+            }
+            break;
+        case 5:
+            try {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+                $sql = "SELECT
+                            `id_suspension`, `id_contrato`, `id_tipo_nov`, `fec_inicia`, `fec_fin`, `observacion`
+                        FROM
+                            `seg_novedad_contrato_suspension`
+                        WHERE `id_suspension` = '$id_novedad'";
+                $rs = $cmd->query($sql);
+                $detalles = $rs->fetch();
+                $response = isset($detalles) ? $detalles : $cmd->errorInfo()[2];
+                $cmd = null;
+            } catch (PDOException $e) {
+                $response = $e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage();
+            }
+            break;
+        case 6:
+            try {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+                $sql = "SELECT
+                            `id_reinicio`, `id_tipo_nov`, `id_suspension`, `fec_reinicia`, `observacion`
+                        FROM
+                            `seg_novedad_contrato_reinicio`
+                        WHERE `id_reinicio` =  '$id_novedad'";
+                $rs = $cmd->query($sql);
+                $detalles = $rs->fetch();
+                $response = isset($detalles) ? $detalles : $cmd->errorInfo()[2];
+                $cmd = null;
+            } catch (PDOException $e) {
+                $response = $e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage();
+            }
+            break;
+        case 7:
+            try {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+                $sql = "SELECT
+                            `id_terminacion`, `id_tipo_nov`, `id_t_terminacion`, `observacion`
+                        FROM
+                            `seg_novedad_contrato_terminacion`
+                        WHERE `id_terminacion` =  '$id_novedad'";
+                $rs = $cmd->query($sql);
+                $detalles = $rs->fetch();
+                $response = isset($detalles) ? $detalles : $cmd->errorInfo()[2];
+                $cmd = null;
+            } catch (PDOException $e) {
+                $response = $e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage();
+            }
+            break;
+        case 8:
+            try {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+                $sql = "SELECT
+                            `id_liquidacion`, `id_t_liq`, `id_tipo_nov`, `fec_liq`, `val_cte`, `val_cta`, `observacion`
+                        FROM
+                            `seg_novedad_contrato_liquidacion`
+                        WHERE `id_liquidacion` = '$id_novedad'";
+                $rs = $cmd->query($sql);
+                $detalles = $rs->fetch();
+                $response = isset($detalles) ? $detalles : $cmd->errorInfo()[2];
+                $cmd = null;
+            } catch (PDOException $e) {
+                $response = $e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage();
+            }
+            break;
+    }
+    echo json_encode($response);
+});
+
+//PUT Actualizar novedad -> adicion o prorroga.
+$app->put('/res/actualizar/novedad/adicion_prorroga', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id_novedad = $data['id_novedad'];
+    $tip_novedad = $data['tip_novedad'];
+    $val_adicion = $data['val_adicion'];
+    $fec_adicion = $data['fec_adicion'];
+    $cdp = $data['cdp'];
+    $fini_pro = $data['fini_pro'];
+    $ffin_pro = $data['ffin_pro'];
+    $observacion = $data['observacion'];
+    $iduser = $data['iduser'];
+    $tipouser = $data['tipouser'];
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "UPDATE `seg_novedad_contrato_adi_pror` SET `id_tip_nov` = ?,`val_adicion` = ?,`fec_adcion` = ?,`cdp` = ?,`fec_ini_prorroga` = ?,`fec_fin_prorroga` = ?,`observacion` = ?
+                WHERE `id_nov_con`= ?";
+        $sql = $cmd->prepare($sql);
+        $sql->bindParam(1, $tip_novedad, PDO::PARAM_INT);
+        $sql->bindParam(2, $val_adicion, PDO::PARAM_STR);
+        $sql->bindParam(3, $fec_adicion, PDO::PARAM_STR);
+        $sql->bindParam(4, $cdp, PDO::PARAM_INT);
+        $sql->bindParam(5, $fini_pro, PDO::PARAM_STR);
+        $sql->bindParam(6, $ffin_pro, PDO::PARAM_STR);
+        $sql->bindParam(7, $observacion, PDO::PARAM_STR);
+        $sql->bindParam(8, $id_novedad, PDO::PARAM_INT);
+        if (!($sql->execute())) {
+            echo json_encode($sql->errorInfo()[2]);
+        } else {
+            if ($sql->rowCount() > 0) {
+                $sql = "UPDATE `seg_novedad_contrato_adi_pror` SET `id_user_act` = ?,`tipo_user_act` = ?,`fec_act` = ?
+                WHERE `id_nov_con`= ?";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $iduser, PDO::PARAM_INT);
+                $sql->bindParam(2, $tipouser, PDO::PARAM_STR);
+                $sql->bindValue(3, $date->format('Y-m-d H:i:s'));
+                $sql->bindParam(4, $id_novedad, PDO::PARAM_INT);
+                $sql->execute();
+                echo json_encode(1);
+            } else {
+                echo json_encode('No se ha ingresado ningún cambio');
+            }
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+//PUT actualizar novedad -> cesion.
+$app->put('/res/actualizar/novedad/cesion', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id_contrato = $data['id_contrato'];
+    $id_novedad = $data['id_novedad'];
+    $fec_cesion = $data['fec_cesion'];
+    $id_tercero = $data['id_tercero'];
+    $observacion = $data['observacion'];
+    $iduser = $data['iduser'];
+    $tipouser = $data['tipouser'];
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT
+                    `seg_contratos_enviados`.`id_c_env`
+                    , `seg_contratos`.`id_tercero`
+                FROM
+                    `seg_contratos_enviados`
+                    INNER JOIN `seg_contratos` 
+                        ON (`seg_contratos_enviados`.`id_c_rec` = `seg_contratos`.`id_c`)
+                WHERE `seg_contratos_enviados`.`id_c_env` = '$id_contrato' LIMIT 1";
+        $rs = $cmd->query($sql);
+        $id_cdev = $rs->fetch();
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+    $iD_terc = $id_cdev['id_tercero'];
+    if ($iD_terc == $id_tercero) {
+        echo json_encode('Tercero cesionario no puede ser él mismo');
+        exit();
+    } else {
+        try {
+            $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+            $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+            $sql = "UPDATE `seg_novedad_contrato_cesion` SET `id_tercero` = ?,`fec_cesion` = ?,`observacion` = ? WHERE `id_cesion` = ?";
+            $sql = $cmd->prepare($sql);
+            $sql->bindParam(1, $id_tercero, PDO::PARAM_INT);
+            $sql->bindParam(2, $fec_cesion, PDO::PARAM_STR);
+            $sql->bindParam(3, $observacion, PDO::PARAM_STR);
+            $sql->bindParam(4, $id_novedad, PDO::PARAM_INT);
+            if (!($sql->execute())) {
+                echo json_encode($sql->errorInfo()[2]);
+            } else {
+                if ($sql->rowCount() > 0) {
+                    $sql = "UPDATE `seg_novedad_contrato_cesion` SET `id_user_act` = ?,`tipo_user_act` = ?,`fec_act` = ? WHERE `id_cesion`= ?";
+                    $sql = $cmd->prepare($sql);
+                    $sql->bindParam(1, $iduser, PDO::PARAM_INT);
+                    $sql->bindParam(2, $tipouser, PDO::PARAM_STR);
+                    $sql->bindValue(3, $date->format('Y-m-d H:i:s'));
+                    $sql->bindParam(4, $id_novedad, PDO::PARAM_INT);
+                    $sql->execute();
+                    echo json_encode(1);
+                } else {
+                    echo json_encode('No se ha ingresado ningún cambio');
+                }
+            }
+            $cmd = null;
+        } catch (PDOException $e) {
+            echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+        }
+    }
+});
+//PUT registar actualizar -> suspensión.
+$app->put('/res/actualizar/novedad/suspension', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id_contrato = $data['id_contrato'];
+    $id_novedad = $data['id_novedad'];
+    $fini_susp = $data['fini_susp'];
+    $ffin_susp = $data['ffin_susp'];
+    $observacion = $data['observacion'];
+    $iduser = $data['iduser'];
+    $tipouser = $data['tipouser'];
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT `fec_fin` FROM `seg_novedad_contrato_suspension` WHERE `id_contrato` = '$id_contrato'  ORDER BY `fec_fin` DESC";
+        $rs = $cmd->query($sql);
+        $suspensiones = $rs->fetchAll();
+        $filas = count($suspensiones);
+        $cmd = null;
+        //echo json_encode($suspensiones[1]['fec_fin'] . ' ?? ' . $fini_susp);
+        //exit();
+        if ($filas > 1 && $fini_susp <= $suspensiones[1]['fec_fin']) {
+            echo json_encode('Fecha inicial de la nueva suspensión debe ser mayor a la fecha final de la última suspensión: ' . $suspensiones[1]['fec_fin']);
+            exit();
+        } else {
+            try {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+                $sql = "UPDATE `seg_novedad_contrato_suspension` SET `fec_inicia` = ?,`fec_fin` = ?,`observacion` = ? WHERE `id_suspension` = ?";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $fini_susp, PDO::PARAM_STR);
+                $sql->bindParam(2, $ffin_susp, PDO::PARAM_STR);
+                $sql->bindParam(3, $observacion, PDO::PARAM_STR);
+                $sql->bindParam(4, $id_novedad, PDO::PARAM_INT);
+                if (!($sql->execute())) {
+                    echo json_encode($sql->errorInfo()[2]);
+                } else {
+                    if ($sql->rowCount() > 0) {
+                        $sql = "UPDATE `seg_novedad_contrato_suspension` SET `id_user_act` = ?,`tipo_user_act` = ?,`fec_act` = ? WHERE `id_suspension`= ?";
+                        $sql = $cmd->prepare($sql);
+                        $sql->bindParam(1, $iduser, PDO::PARAM_INT);
+                        $sql->bindParam(2, $tipouser, PDO::PARAM_STR);
+                        $sql->bindValue(3, $date->format('Y-m-d H:i:s'));
+                        $sql->bindParam(4, $id_novedad, PDO::PARAM_INT);
+                        $sql->execute();
+                        echo json_encode(1);
+                    } else {
+                        echo json_encode('No se ha ingresado ningún cambio');
+                    }
+                }
+                $cmd = null;
+            } catch (PDOException $e) {
+                echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+            }
+        }
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+//PUT actualizar novedad -> reinicio.
+$app->put('/res/actualizar/novedad/reinicio', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id_novedad = $data['id_novedad'];
+    $frein = $data['frein'];
+    $observacion = $data['observacion'];
+    $iduser = $data['iduser'];
+    $tipouser = $data['tipouser'];
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "UPDATE `seg_novedad_contrato_reinicio` SET `fec_reinicia` = ?, `observacion` = ? WHERE `id_reinicio` = ?";
+        $sql = $cmd->prepare($sql);
+        $sql->bindParam(1, $frein, PDO::PARAM_STR);
+        $sql->bindParam(2, $observacion, PDO::PARAM_STR);
+        $sql->bindParam(3, $id_novedad, PDO::PARAM_INT);
+        if (!($sql->execute())) {
+            echo json_encode($sql->errorInfo()[2]);
+        } else {
+            if ($sql->rowCount() > 0) {
+                $sql = "UPDATE `seg_novedad_contrato_reinicio` SET `id_user_act` = ?,`tipo_user_act` = ?,`fec_act` = ? WHERE `id_reinicio`= ?";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $iduser, PDO::PARAM_INT);
+                $sql->bindParam(2, $tipouser, PDO::PARAM_STR);
+                $sql->bindValue(3, $date->format('Y-m-d H:i:s'));
+                $sql->bindParam(4, $id_novedad, PDO::PARAM_INT);
+                $sql->execute();
+                echo json_encode(1);
+            } else {
+                echo json_encode('No se ha ingresado ningún cambio');
+            }
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+//PUT actualizar novedad -> terminacion.
+$app->put('/res/actualizar/novedad/terminacion', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id_novedad = $data['id_novedad'];
+    $id_tt = $data['id_tt'];
+    $observacion = $data['observacion'];
+    $iduser = $data['iduser'];
+    $tipouser = $data['tipouser'];
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "UPDATE `seg_novedad_contrato_terminacion` SET `id_t_terminacion` = ?, `observacion` = ? WHERE `id_terminacion` = ?";
+        $sql = $cmd->prepare($sql);
+        $sql->bindParam(1, $id_tt, PDO::PARAM_INT);
+        $sql->bindParam(2, $observacion, PDO::PARAM_STR);
+        $sql->bindParam(3, $id_novedad, PDO::PARAM_INT);
+        if (!($sql->execute())) {
+            echo json_encode($sql->errorInfo()[2]);
+        } else {
+            if ($sql->rowCount() > 0) {
+                $sql = "UPDATE `seg_novedad_contrato_terminacion` SET `id_user_act` = ?,`tipo_user_act` = ?,`fec_act` = ? WHERE `id_terminacion`= ?";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $iduser, PDO::PARAM_INT);
+                $sql->bindParam(2, $tipouser, PDO::PARAM_STR);
+                $sql->bindValue(3, $date->format('Y-m-d H:i:s'));
+                $sql->bindParam(4, $id_novedad, PDO::PARAM_INT);
+                $sql->execute();
+                echo json_encode(1);
+            } else {
+                echo json_encode('No se ha ingresado ningún cambio');
+            }
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+//PUT actualizar novedad -> liquidación.
+$app->put('/res/actualizar/novedad/liquidacion', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id_novedad = $data['id_novedad'];
+    $fec_liq = $data['fec_liq'];
+    $tip_liq = $data['tip_liq'];
+    $val_ctte = $data['val_ctte'];
+    $val_ctta = $data['val_ctta'];
+    $observacion = $data['observacion'];
+    $iduser = $data['iduser'];
+    $tipouser = $data['tipouser'];
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "UPDATE `seg_novedad_contrato_liquidacion` SET `id_t_liq` = ?,`fec_liq` = ?,`val_cte` = ?,`val_cta` = ?,`observacion` = ? WHERE `id_liquidacion` = ?";
+        $sql = $cmd->prepare($sql);
+        $sql->bindParam(1, $tip_liq, PDO::PARAM_INT);
+        $sql->bindParam(2, $fec_liq, PDO::PARAM_STR);
+        $sql->bindParam(3, $val_ctte, PDO::PARAM_STR);
+        $sql->bindParam(4, $val_ctta, PDO::PARAM_STR);
+        $sql->bindParam(5, $observacion, PDO::PARAM_STR);
+        $sql->bindParam(6, $id_novedad, PDO::PARAM_INT);
+        if (!($sql->execute())) {
+            echo json_encode($sql->errorInfo()[2]);
+        } else {
+            if ($sql->rowCount() > 0) {
+                $sql = "UPDATE `seg_novedad_contrato_liquidacion` SET `id_user_act` = ?,`tipo_user_act` = ?,`fec_act` = ? WHERE `id_liquidacion`= ?";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $iduser, PDO::PARAM_INT);
+                $sql->bindParam(2, $tipouser, PDO::PARAM_STR);
+                $sql->bindValue(3, $date->format('Y-m-d H:i:s'));
+                $sql->bindParam(4, $id_novedad, PDO::PARAM_INT);
+                $sql->execute();
+                echo json_encode(1);
+            } else {
+                echo json_encode('No se ha ingresado ningún cambio');
+            }
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+//PUT registar novedad -> liquidación.
+$app->put('/res/nuevo/contrato/designa_supervisor', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id_contrato = $data['id_contrato'];
+    $id_tercero = $data['id_tercero'];
+    $fec_desig = $data['fec_desig'];
+    $observacion = $data['observacion'];
+    $iduser = $data['iduser'];
+    $tipouser = $data['tipouser'];
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "INSERT INTO `seg_supervisor_designado`(`id_tercero`,`id_contrato`,`fec_designacion`,`observacion`,`id_user_reg`,`tipo_user_reg`,`fec_reg`)
+                VALUES(?, ?, ?, ?, ?, ?, ?)";
+        $sql = $cmd->prepare($sql);
+        $sql->bindParam(1, $id_tercero, PDO::PARAM_INT);
+        $sql->bindParam(2, $id_contrato, PDO::PARAM_INT);
+        $sql->bindParam(3, $fec_desig, PDO::PARAM_STR);
+        $sql->bindParam(4, $observacion, PDO::PARAM_STR);
+        $sql->bindParam(5, $iduser, PDO::PARAM_INT);
+        $sql->bindParam(6, $tipouser, PDO::PARAM_STR);
+        $sql->bindValue(7, $date->format('Y-m-d H:i:s'));
+        $sql->execute();
+        $id_sup = $cmd->lastInsertId();
+        if ($id_sup > 0) {
+            $response = [
+                'status' => '1',
+                'msg' => $id_sup
+            ];
+        } else {
+            $response = [
+                'status' => '0',
+                'msg' => $sql->errorInfo()[2]
+            ];
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        $response['msg'] = $e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage();
+    }
+    echo json_encode($response);
+});
+//listar contrato a supervisar
+$app->get('/res/listar/contratos_supervisar/{id}', function (Request $request, Response $response) {
+    $id = $request->getAttribute('id');
+    try {
+        include $GLOBALS['conexion'];
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+        $sql = "SELECT
+                    `seg_supervisor_designado`.`id_supervision`
+                    , `seg_supervisor_designado`.`id_tercero`
+                    , `seg_supervisor_designado`.`fec_designacion`
+                    , `seg_supervisor_designado`.`observacion`
+                    , `seg_supervisor_designado`.`id_contrato` AS `contrato`
+                    , `seg_supervisor_designado`.`ruta`
+                    , `seg_supervisor_designado`.`nombre`
+                    , `seg_contratos_enviados`.`ruta_contrato`
+                    , `seg_contratos_enviados`.`nombre_contrato`
+                    , `seg_contratos`.`id_contrato`
+                    , `seg_contratos`.`nit_empresa`
+                FROM
+                    `seg_supervisor_designado`
+                    INNER JOIN `seg_contratos_enviados` 
+                        ON (`seg_supervisor_designado`.`id_contrato` = `seg_contratos_enviados`.`id_c_env`)
+                    INNER JOIN `seg_contratos` 
+                        ON (`seg_contratos_enviados`.`id_c_rec` = `seg_contratos`.`id_c`)
+                WHERE `seg_supervisor_designado`.`id_tercero` = '$id'";
+        $rs = $cmd->query($sql);
+        $docs = $rs->fetchAll();
+        if (!empty($docs)) {
+            echo json_encode($docs);
+        } else {
+            echo json_encode('0');
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+//listar docs contrato a supervisar
+$app->get('/res/listar/contrato_acta/{id}', function (Request $request, Response $response) {
+    $id = $request->getAttribute('id');
+    try {
+        include $GLOBALS['conexion'];
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+        $sql = "SELECT
+                    `seg_supervisor_designado`.`id_supervision`
+                    , `seg_supervisor_designado`.`id_tercero`
+                    , `seg_supervisor_designado`.`fec_designacion`
+                    , `seg_supervisor_designado`.`observacion`
+                    , `seg_supervisor_designado`.`id_contrato` AS `contrato`
+                    , `seg_supervisor_designado`.`ruta`
+                    , `seg_supervisor_designado`.`nombre`
+                    , `seg_contratos_enviados`.`ruta_contrato`
+                    , `seg_contratos_enviados`.`nombre_contrato`
+                    , `seg_contratos`.`id_contrato`
+                    , `seg_contratos`.`nit_empresa`
+                    , `id_c_rec`
+                    , `seg_supervisor_designado`.`estado`
+                FROM
+                    `seg_supervisor_designado`
+                    INNER JOIN `seg_contratos_enviados` 
+                        ON (`seg_supervisor_designado`.`id_contrato` = `seg_contratos_enviados`.`id_c_env`)
+                    INNER JOIN `seg_contratos` 
+                        ON (`seg_contratos_enviados`.`id_c_rec` = `seg_contratos`.`id_c`)
+                WHERE `seg_supervisor_designado`.`id_contrato` = '$id'";
+        $rs = $cmd->query($sql);
+        $docs = $rs->fetch();
+        if (!empty($docs)) {
+            echo json_encode($docs);
+        } else {
+            echo json_encode('0');
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+//lista documentos contrato a supervisar
+$app->get('/res/detalles/documentos/contrato_supervisar/{id}', function (Request $request, Response $response) {
+    $id = $request->getAttribute('id');
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT
+                    `seg_docs_contrato`.`id_doc_c`
+                    , `seg_docs_contrato`.`id_c_env`
+                    , `seg_docs_contrato`.`id_tipo_doc`
+                    , `seg_tipo_doc_soporte`.`descripcion`
+                    , `seg_docs_contrato`.`otro_tipo`
+                    , `seg_docs_contrato`.`ruta_doc_c`
+                    , `seg_docs_contrato`.`nom_doc_c`
+                    , `seg_docs_contrato`.`estado`
+                FROM
+                    `seg_docs_contrato`
+                INNER JOIN `seg_tipo_doc_soporte` 
+                    ON (`seg_docs_contrato`.`id_tipo_doc` = `seg_tipo_doc_soporte`.`id_doc_sop`) 
+                WHERE `seg_docs_contrato`.`id_c_env` = '$id' ORDER BY `id_tipo_doc` DESC";
+        $rs = $cmd->query($sql);
+        $datos = $rs->fetchAll();
+        echo json_encode($datos);
         $cmd = null;
     } catch (PDOException $e) {
         echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
