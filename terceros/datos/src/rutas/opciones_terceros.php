@@ -188,9 +188,9 @@ $app->get('/res/datos/id/{id}', function (Request $request, Response $response) 
                     *
                 FROM
                     seg_terceros
-                WHERE id_tercero = '$id'";
+                WHERE id_tercero IN ($id)";
         $rs = $cmd->query($sql);
-        $tercero = $rs->fetch();
+        $tercero = $rs->fetchAll();
         if (!empty($tercero)) {
             echo json_encode($tercero);
         } else {
@@ -1539,7 +1539,7 @@ $app->get('/res/listar/empresas', function (Request $request, Response $response
                         ON (`seg_empresas`.`id_pais` = `seg_pais`.`id_pais`)
                     INNER JOIN `seg_departamento` 
                         ON (`seg_departamento`.`id_pais` = `seg_pais`.`id_pais`) AND (`seg_empresas`.`id_dpto` = `seg_departamento`.`id_dpto`) AND (`seg_municipios`.`id_departamento` = `seg_departamento`.`id_dpto`)
-                WHERE `seg_empresas`.`estado` = '1'";
+                WHERE `seg_empresas`.`estado` = '1' ORDER BY `seg_empresas`.`nombre` ASC";
         $rs = $cmd->query($sql);
         $empresas = $rs->fetchAll();
         if (!empty($empresas)) {
@@ -1822,6 +1822,7 @@ $app->get('/res/lista/cotizacion_enviada/{id}', function (Request $request, Resp
                 `seg_valor_cotizacion`.`id_val_cot`
                 , `seg_valor_cotizacion`.`id_tercero`
                 , `seg_valor_cotizacion`.`id_cot_ter`
+                , `seg_valor_cotizacion`.`cant_entrega`
                 , `seg_cotizaciones`.`id_cot_empresa`
                 , `seg_cotizaciones`.`nit_empresa`
                 , `seg_cotizaciones`.`id_producto`
@@ -1915,7 +1916,7 @@ $app->get('/res/listar/estado_cotizacion/{id}', function (Request $request, Resp
         if (isset($estado_cot)) {
             echo json_encode($estado_cot[0]['estado']);
         } else {
-            echo json_encode(0);
+            echo json_encode('0');
         }
         $cmd = null;
     } catch (PDOException $e) {
@@ -3370,6 +3371,301 @@ $app->get('/res/detalles/documentos/contrato_supervisar/{id}', function (Request
         $rs = $cmd->query($sql);
         $datos = $rs->fetchAll();
         echo json_encode($datos);
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+//PUT entregar compra 
+$app->PUT('/res/actualizar/entrega_compra', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    $iduser = $data[0]['iduser'];
+    $tipuser = $data[0]['tipuser'];
+    $pendientes = $data[0]['pendientes'];
+    $id_contrato = $data[0]['id_contrato'];
+    $total_entregas = 0;
+    $cantidad_entrega = 0;
+    include $GLOBALS['conexion'];
+    foreach ($data as $key => $value) {
+        if ($key != 0) {
+            try {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+                $sql = "INSERT INTO `seg_entrega_compra` (`id_prod`, `cantidad`,`cant_inicial`, `id_user_reg`, `tipo_user_reg`, `fec_reg`) VALUES (?, ?, ?, ?, ?, ?)";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $key);
+                $sql->bindParam(2, $value);
+                $sql->bindParam(3, $value);
+                $sql->bindParam(4, $iduser);
+                $sql->bindParam(5, $tipuser);
+                $sql->bindValue(6, $date->format('Y-m-d H:i:s'));
+                $sql->execute();
+                if ($sql->rowCount() > 0) {
+                    $total_entregas++;
+                    $cantidad_entrega += intval($value);
+                } else {
+                    echo json_encode($sql->errorInfo()[2]);
+                }
+                $cmd = null;
+            } catch (PDOException $e) {
+                echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+            }
+        }
+    }
+    if ($total_entregas > 0) {
+        if (intval($cantidad_entrega) == intval($pendientes)) {
+            $estado = 3;
+            try {
+                $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+                $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+                $sql = "UPDATE `seg_contratos` SET `estado`= ?, `id_user_act` = ?, `tipo_user_act` = ?, `fec_act` = ? WHERE `id_c` = ?";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $estado, PDO::PARAM_INT);
+                $sql->bindParam(2, $iduser, PDO::PARAM_INT);
+                $sql->bindParam(3, $tipuser, PDO::PARAM_STR);
+                $sql->bindValue(4, $date->format('Y-m-d H:i:s'));
+                $sql->bindParam(5, $id_contrato, PDO::PARAM_INT);
+                $sql->execute();
+            } catch (PDOException $e) {
+                echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+            }
+        }
+        echo json_encode(1);
+    } else {
+        echo json_encode('No se puedo hacer la entrega');
+    }
+});
+//lista contratado y entrega
+//ver cotizacion enviada 
+$app->get('/res/lista/compra_entregado/{id}', function (Request $request, Response $response) {
+    $datos = explode('|', $request->getAttribute('id'));
+    $id_ter = $datos[0];
+    $nit = $datos[1];
+    $id_cot = $datos[2];
+    include $GLOBALS['conexion'];
+    $response = [];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $consulta = "FROM 
+                        (SELECT
+                            `seg_valor_cotizacion`.`id_val_cot`
+                            , `seg_valor_cotizacion`.`id_tercero`
+                            , `seg_valor_cotizacion`.`id_cot_ter`
+                            , `seg_valor_cotizacion`.`cant_entrega`
+                            , `seg_cotizaciones`.`id_cot_empresa`
+                            , `seg_cotizaciones`.`nit_empresa`
+                            , `seg_cotizaciones`.`id_producto`
+                            , `seg_cotizaciones`.`id_bn_sv`
+                            , `seg_cotizaciones`.`bien_servicio`
+                            , `seg_cotizaciones`.`cantidad` AS `cantid`
+                            , `seg_cotizaciones`.`val_estimado_unid`
+                            , `seg_valor_cotizacion`.`valor`
+                        FROM
+                            `seg_valor_cotizacion`
+                            INNER JOIN `seg_cotizaciones` 
+                                ON (`seg_valor_cotizacion`.`id_cot_ter` = `seg_cotizaciones`.`id_cot`)
+                        WHERE `seg_valor_cotizacion`.`id_tercero` = '$id_ter' AND `seg_cotizaciones`.`id_cot_empresa`= '$id_cot' AND  `seg_cotizaciones`.`nit_empresa` = '$nit') AS t
+                    LEFT JOIN `seg_entrega_compra` 
+                        ON (`seg_entrega_compra`.`id_prod` = `t`.`id_val_cot`)";
+        $sql = "SELECT
+                    `seg_valor_cotizacion`.`id_val_cot`
+                    , `seg_valor_cotizacion`.`id_tercero`
+                    , `seg_valor_cotizacion`.`id_cot_ter`
+                    , `seg_valor_cotizacion`.`cant_entrega`
+                    , `seg_cotizaciones`.`id_cot_empresa`
+                    , `seg_cotizaciones`.`nit_empresa`
+                    , `seg_cotizaciones`.`id_producto`
+                    , `seg_cotizaciones`.`id_bn_sv`
+                    , `seg_cotizaciones`.`bien_servicio`
+                    , `seg_cotizaciones`.`cantidad` AS `cantid`
+                    , `seg_cotizaciones`.`val_estimado_unid`
+                    , `seg_valor_cotizacion`.`valor`
+                FROM
+                    `seg_valor_cotizacion`
+                    INNER JOIN `seg_cotizaciones` 
+                        ON (`seg_valor_cotizacion`.`id_cot_ter` = `seg_cotizaciones`.`id_cot`)
+                WHERE `seg_valor_cotizacion`.`id_tercero` = '$id_ter' AND `seg_cotizaciones`.`id_cot_empresa`= '$id_cot' AND  `seg_cotizaciones`.`nit_empresa` = '$nit'";
+        $rs = $cmd->query($sql);
+        $lista = $rs->fetchAll();
+        $response['listado'] =  $lista;
+        $sql = "SELECT 
+                    `id_val_cot`
+                    , `seg_entrega_compra`.`id_entrega`
+                    , `seg_entrega_compra`.`cantidad` AS `cantidad_entrega`
+                    , `seg_entrega_compra`.`estado`
+                    , `seg_entrega_compra`.`fec_reg` 
+                    , `seg_entrega_compra`.`fec_act`" . $consulta . " ORDER BY `seg_entrega_compra`.`fec_reg` ASC";
+        $rs = $cmd->query($sql);
+        $entregado = $rs->fetchAll();
+        $response['entregas'] =  $entregado;
+        $sql = "SELECT 
+                    COUNT(`seg_entrega_compra`.`cantidad`) AS `entregas`" . $consulta . "GROUP BY `id_val_cot` ORDER BY entregas DESC LIMIT 1";
+        $rs = $cmd->query($sql);
+        $num_entregas = $rs->fetch();
+        $response['num_entregas'] = $num_entregas;
+        $response['nit'] =  $nit;
+        $sql = "SELECT `id_c` FROM `seg_contratos` WHERE `id_compra`= '$id_cot' AND `nit_empresa`= '$nit' AND `id_tercero` = '$id_ter'  ";
+        $rs = $cmd->query($sql);
+        $id_cont = $rs->fetch();
+        $id_c = $id_cont['id_c'];
+        $response['id_c'] = $id_c;
+        if (!empty($response)) {
+            echo json_encode($response);
+        } else {
+            echo json_encode('0');
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+//actualziar estado de elemento compra entregada
+$app->put('/res/actualizar/estado_entrega', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    include $GLOBALS['conexion'];
+    $id_contrato = $data['id_contrato'];
+    $estado = $data['estado'];
+    $id = $data["id"];
+    $cant_rec = $data["cant_rec"];
+    $iduser = $data["iduser"];
+    $tipuser = $data["tipuser"];
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    try {
+        $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "UPDATE `seg_entrega_compra` SET `cantidad`= ?, `estado`= ?, `id_user_act` = ?, `tipo_user_act` = ?, `fec_act` = ? WHERE `id_entrega` = ?";
+        $sql = $cmd->prepare($sql);
+        $sql->bindParam(1, $cant_rec, PDO::PARAM_INT);
+        $sql->bindParam(2, $estado, PDO::PARAM_INT);
+        $sql->bindParam(3, $iduser, PDO::PARAM_INT);
+        $sql->bindParam(4, $tipuser, PDO::PARAM_STR);
+        $sql->bindValue(5, $date->format('Y-m-d H:i:s'));
+        $sql->bindParam(6, $id, PDO::PARAM_INT);
+        $sql->execute();
+        if (!($sql->rowCount() > 0)) {
+            echo json_encode($sql->errorInfo()[2]);
+        } else {
+            if ($estado == 2) {
+                $sql = "UPDATE `seg_contratos` SET `estado`= ?, `id_user_act` = ?, `tipo_user_act` = ?, `fec_act` = ? WHERE `id_c` = ?";
+                $sql = $cmd->prepare($sql);
+                $sql->bindParam(1, $estado, PDO::PARAM_INT);
+                $sql->bindParam(2, $iduser, PDO::PARAM_INT);
+                $sql->bindParam(3, $tipuser, PDO::PARAM_STR);
+                $sql->bindValue(4, $date->format('Y-m-d H:i:s'));
+                $sql->bindParam(5, $id_contrato, PDO::PARAM_INT);
+                $sql->execute();
+                if (!($sql->rowCount() > 0)) {
+                    echo json_encode($cmd->errorInfo()[2]);
+                }
+            }
+            echo json_encode(1);
+        }
+        $cmd = null;
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+//nuevo certificadi form 220
+//POST Nuevo tercero
+$app->post('/res/nuevo/certificado/form220', function (Request $request, Response $response) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $archivo = $data['archivo'];
+    $temporal = base64_decode($archivo);
+    $vigencia = $data['vigencia'];
+    $id_empleado = $data['id_empleado'];
+    $tipo_certificado = $data['tipo_certificado'];
+    $empresa = $data['empresa'];
+    $id_user = $data['id_user'];
+    $tipo_user = $data['tipo_user'];
+    $nom_archivo = $tipo_certificado . '_' . date('YmdGis') . '.docx';
+    $nom_archivo = strlen($nom_archivo) >= 101 ? substr($nom_archivo, 0, 100) : $nom_archivo;
+    $date = new DateTime('now', new DateTimeZone('America/Bogota'));
+    try {
+        include $GLOBALS['conexion'];
+        $ruta = '../../uploads/terceros/certificaciones/' . $id_empleado . '/';
+        if (!file_exists($ruta)) {
+            $ruta = mkdir('../../uploads/terceros/certificaciones/' . $id_empleado . '/', 0777, true);
+            $ruta = '../../uploads/terceros/certificaciones/' . $id_empleado . '/';
+        }
+        $res = file_put_contents("$ruta/$nom_archivo", $temporal);
+        if (false !== $res) {
+            $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+            $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+            $sql = "INSERT INTO `seg_certificaciones` (`id_tercero`, `id_tipo_certf`, `ruta`, `nombre_archivo`, `nit_empresa`, `vigencia`, `id_user_reg`, `tipo_user_reg`, `fec_reg`)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sql = $cmd->prepare($sql);
+            $sql->bindParam(1, $id_empleado, PDO::PARAM_INT);
+            $sql->bindParam(2, $tipo_certificado, PDO::PARAM_INT);
+            $sql->bindParam(3, $ruta, PDO::PARAM_STR);
+            $sql->bindParam(4, $nom_archivo, PDO::PARAM_STR);
+            $sql->bindParam(5, $empresa, PDO::PARAM_STR);
+            $sql->bindParam(6, $vigencia, PDO::PARAM_STR);
+            $sql->bindParam(7, $id_user, PDO::PARAM_INT);
+            $sql->bindParam(8, $tipo_user, PDO::PARAM_STR);
+            $sql->bindValue(9, $date->format('Y-m-d H:i:s'));
+            $sql->execute();
+            if ($cmd->lastInsertId() > 0) {
+                echo json_encode(1);
+            } else {
+                echo json_encode($sql->errorInfo()[2]);
+            }
+        } else {
+            echo json_encode('No se pudo adjuntar el archivo');
+        }
+    } catch (PDOException $e) {
+        echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
+    }
+});
+//consultar certificaciones form 220
+$app->get('/res/consulta/certificados/{id}', function (Request $request, Response $response) {
+    $data = explode('|', $request->getAttribute('id'));
+    $nit = $data[0];
+    $vigencia = $data[1];
+    $tipo = $data[2];
+    $id_emplea = $data[3];
+    include $GLOBALS['conexion'];
+    try {
+        $cmd = new PDO("$bd_driver:host=$bd_servidor;dbname=$bd_base;$charset", $bd_usuario, $bd_clave);
+        $cmd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $sql = "SELECT
+                    `seg_certificaciones`.`id_certificacion`
+                    , `seg_certificaciones`.`id_tercero`
+                    , `seg_certificaciones`.`id_tipo_certf`
+                    , `seg_certificaciones`.`ruta`
+                    , `seg_certificaciones`.`nombre_archivo`
+                    , `seg_certificaciones`.`nit_empresa`
+                    , `seg_certificaciones`.`vigencia`
+                    , `seg_terceros`.`tipo_doc`
+                    , `seg_terceros`.`cc_nit`
+                    , `seg_terceros`.`apellido1`
+                    , `seg_terceros`.`apellido2`
+                    , `seg_terceros`.`nombre1`
+                    , `seg_terceros`.`nombre2`
+                    , `seg_terceros`.`razon_social`
+                FROM
+                    `docs_api`.`seg_certificaciones`
+                    INNER JOIN `docs_api`.`seg_terceros` 
+                        ON (`seg_certificaciones`.`id_tercero` = `seg_terceros`.`id_tercero`)
+                WHERE `seg_certificaciones`.`nit_empresa` = '$nit' AND `seg_certificaciones`.`vigencia` = '$vigencia' AND `seg_certificaciones`.`id_tipo_certf`= '$tipo'";
+        $rs = $cmd->query($sql);
+        $forms = $rs->fetchAll();
+        if (!empty($forms)) {
+            if ($id_emplea == '') {
+                echo json_encode($forms);
+            } else {
+                $key = array_search($id_emplea, array_column($forms, 'id_tercero'));
+                if ($key !== false) {
+                    echo json_encode($forms[$key]['ruta'] . $forms[$key]['nombre_archivo']);
+                } else {
+                    echo json_encode('0');
+                }
+            }
+        } else {
+            echo json_encode('0');
+        }
         $cmd = null;
     } catch (PDOException $e) {
         echo json_encode($e->getCode() == 2002 ? 'Sin Conexión a Mysql (Error: 2002)' : 'Error: ' . $e->getMessage());
