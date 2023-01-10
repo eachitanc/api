@@ -41,7 +41,7 @@ CREATE TABLE `seg_actividad_terceros` (
   KEY `ID_ATCVECON` (`id_actividad`),
   CONSTRAINT `ID_ATCVECON` FOREIGN KEY (`id_actividad`) REFERENCES `seg_actividades_economicas` (`id_actividad`),
   CONSTRAINT `ID_TERCEROACTV` FOREIGN KEY (`id_tercero`) REFERENCES `seg_terceros` (`id_tercero`)
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -50,7 +50,7 @@ CREATE TABLE `seg_actividad_terceros` (
 
 LOCK TABLES `seg_actividad_terceros` WRITE;
 /*!40000 ALTER TABLE `seg_actividad_terceros` DISABLE KEYS */;
-INSERT INTO `seg_actividad_terceros` VALUES (2,1,327,'2021-09-01',1,1,'user',NULL,'2021-09-20 14:56:06',1,'otro',NULL,'2021-10-18 15:42:19'),(3,1,145,'2021-09-01',1,1,'user',NULL,'2021-09-20 14:58:20',1,'otro',NULL,'2021-10-18 15:42:18'),(5,3,328,'2021-09-01',1,1,'user',NULL,'2021-09-21 14:14:15',3,'otro',NULL,'2021-10-04 17:01:58'),(8,11,10,'2021-01-01',1,11,'otro',NULL,'2021-09-21 19:57:04',NULL,NULL,NULL,NULL),(9,11,21,'2021-09-01',1,11,'otro',NULL,'2021-09-21 19:58:08',NULL,NULL,NULL,NULL),(12,1,21,'2021-09-01',1,1,'otro',NULL,'2021-09-27 15:23:28',1,'otro',NULL,'2022-01-18 14:25:38'),(13,3,21,NULL,1,1,'user','8001234323','2021-10-05 17:04:33',NULL,NULL,NULL,NULL),(14,3,17,NULL,1,1,'user','8001234323','2021-10-05 17:04:52',NULL,NULL,NULL,NULL),(15,3,48,'2021-10-01',1,1,'user','8001234323','2021-10-05 17:09:02',NULL,NULL,NULL,NULL),(20,3,50,'2021-10-01',1,1,'user','8001234323','2021-10-07 19:48:52',NULL,NULL,NULL,NULL),(21,3,19,'2021-10-01',1,1,'user','8001234323','2021-10-07 19:52:28',NULL,NULL,NULL,NULL),(22,1,180,'2022-01-26',1,1,'otro','1085907600','2022-01-26 17:20:41',NULL,NULL,NULL,NULL);
+INSERT INTO `seg_actividad_terceros` VALUES (2,1,327,'2021-09-01',1,1,'user',NULL,'2021-09-20 14:56:06',1,'otro',NULL,'2021-10-18 15:42:19'),(3,1,145,'2021-09-01',1,1,'user',NULL,'2021-09-20 14:58:20',1,'otro',NULL,'2021-10-18 15:42:18'),(5,3,328,'2021-09-01',1,1,'user',NULL,'2021-09-21 14:14:15',3,'otro',NULL,'2021-10-04 17:01:58'),(8,11,10,'2021-01-01',1,11,'otro',NULL,'2021-09-21 19:57:04',NULL,NULL,NULL,NULL),(9,11,21,'2021-09-01',1,11,'otro',NULL,'2021-09-21 19:58:08',NULL,NULL,NULL,NULL),(13,3,21,NULL,1,1,'user','8001234323','2021-10-05 17:04:33',NULL,NULL,NULL,NULL),(14,3,17,NULL,1,1,'user','8001234323','2021-10-05 17:04:52',NULL,NULL,NULL,NULL),(15,3,48,'2021-10-01',1,1,'user','8001234323','2021-10-05 17:09:02',NULL,NULL,NULL,NULL),(20,3,50,'2021-10-01',1,1,'user','8001234323','2021-10-07 19:48:52',NULL,NULL,NULL,NULL),(21,3,19,'2021-10-01',1,1,'user','8001234323','2021-10-07 19:52:28',NULL,NULL,NULL,NULL),(22,1,180,'2022-01-26',1,1,'otro','1085907600','2022-01-26 17:20:41',NULL,NULL,NULL,NULL),(23,21,180,'2022-03-01',1,1,'user','901045775','2022-03-25 16:27:55',NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `seg_actividad_terceros` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -103,6 +103,40 @@ LOCK TABLES `seg_caracter_empresa` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `seg_certificaciones`
+--
+
+DROP TABLE IF EXISTS `seg_certificaciones`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `seg_certificaciones` (
+  `id_certificacion` int(11) NOT NULL AUTO_INCREMENT,
+  `id_tercero` int(11) DEFAULT NULL,
+  `id_tipo_certf` int(11) DEFAULT NULL,
+  `ruta` varchar(200) DEFAULT NULL,
+  `nombre_archivo` varchar(100) DEFAULT NULL,
+  `nit_empresa` char(12) DEFAULT NULL,
+  `vigencia` char(4) DEFAULT NULL,
+  `id_user_reg` int(11) DEFAULT NULL,
+  `tipo_user_reg` char(5) DEFAULT NULL,
+  `fec_reg` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id_certificacion`),
+  KEY `id_tercero` (`id_tercero`),
+  CONSTRAINT `seg_certificaciones_ibfk_1` FOREIGN KEY (`id_tercero`) REFERENCES `seg_terceros` (`id_tercero`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `seg_certificaciones`
+--
+
+LOCK TABLES `seg_certificaciones` WRITE;
+/*!40000 ALTER TABLE `seg_certificaciones` DISABLE KEYS */;
+INSERT INTO `seg_certificaciones` VALUES (1,35,1,'../../uploads/terceros/certificaciones/35/','1_20220706132609_1085900429_f220.docx','901402281','2022',1,'user','2022-07-06 13:26:09');
+/*!40000 ALTER TABLE `seg_certificaciones` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `seg_contratos`
 --
 
@@ -127,7 +161,7 @@ CREATE TABLE `seg_contratos` (
   PRIMARY KEY (`id_c`),
   KEY `id_tercero` (`id_tercero`),
   CONSTRAINT `seg_contratos_ibfk_1` FOREIGN KEY (`id_tercero`) REFERENCES `seg_terceros` (`id_tercero`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -136,7 +170,7 @@ CREATE TABLE `seg_contratos` (
 
 LOCK TABLES `seg_contratos` WRITE;
 /*!40000 ALTER TABLE `seg_contratos` DISABLE KEYS */;
-INSERT INTO `seg_contratos` VALUES (14,8,13,'901045775',1,'../../uploads/terceros/contratos/1/','cce_20220203150547_contrato.pdf',2,1,'user','2022-02-03 15:05:47',1,'otro','2022-02-03 15:13:30'),(15,9,14,'901045775',1,'../../uploads/terceros/contratos/1/','cce_20220216154819_contrato_16022022.pdf',2,1,'user','2022-02-16 15:48:19',1,'otro','2022-02-17 14:26:01');
+INSERT INTO `seg_contratos` VALUES (14,8,13,'901045775',1,'../../uploads/terceros/contratos/1/','cce_20220203150547_contrato.pdf',2,1,'user','2022-02-03 15:05:47',1,'user','2022-03-23 15:29:51'),(15,9,14,'901045775',1,'../../uploads/terceros/contratos/1/','cce_20220216154819_contrato_16022022.pdf',2,1,'user','2022-02-16 15:48:19',1,'user','2022-03-23 15:36:21'),(16,10,15,'901045775',1,'../../uploads/terceros/contratos/1/','cce_20220224205503_CC-12.pdf',2,1,'user','2022-02-24 20:55:03',1,'otro','2022-02-26 17:21:34'),(17,11,16,'901402281',1,'../../uploads/terceros/contratos/1/','cce_20220225170834_contrato (2).pdf',2,1,'user','2022-02-25 17:08:34',1,'otro','2022-02-25 17:14:54'),(18,12,17,'901045775',22,'../../uploads/terceros/contratos/22/','cce_20220331162625_contrato_computo.pdf',2,1,'user','2022-03-31 16:26:25',1,'user','2022-04-07 20:52:05'),(19,13,18,'901045775',1,'../../uploads/terceros/contratos/1/','cce_20220419170114_grado_general_pregrado40571 (1).pdf',1,1,'user','2022-04-19 17:01:14',NULL,NULL,NULL),(20,15,20,'901045775',1,'../../uploads/terceros/contratos/1/','cce_20220422162350_Doc Apr 04 2022.pdf',1,1,'user','2022-04-22 16:23:50',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `seg_contratos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -162,7 +196,7 @@ CREATE TABLE `seg_contratos_enviados` (
   PRIMARY KEY (`id_c_env`),
   UNIQUE KEY `id_c_rec` (`id_c_rec`),
   CONSTRAINT `seg_contratos_enviados_ibfk_1` FOREIGN KEY (`id_c_rec`) REFERENCES `seg_contratos` (`id_c`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -171,7 +205,7 @@ CREATE TABLE `seg_contratos_enviados` (
 
 LOCK TABLES `seg_contratos_enviados` WRITE;
 /*!40000 ALTER TABLE `seg_contratos_enviados` DISABLE KEYS */;
-INSERT INTO `seg_contratos_enviados` VALUES (10,14,'../../uploads/terceros/contratos/1/','ccd_20220203151330_CC-8.pdf',1,1,'otro','2022-02-03 15:13:30',NULL,NULL,NULL),(11,15,'../../uploads/terceros/contratos/1/','ccd_20220217142601_CC-9.pdf',1,1,'otro','2022-02-17 14:26:01',NULL,NULL,NULL);
+INSERT INTO `seg_contratos_enviados` VALUES (10,14,'../../uploads/terceros/contratos/1/','ccd_20220203151330_CC-8.pdf',1,1,'otro','2022-02-03 15:13:30',NULL,NULL,NULL),(11,15,'../../uploads/terceros/contratos/1/','ccd_20220217142601_CC-9.pdf',1,1,'otro','2022-02-17 14:26:01',NULL,NULL,NULL),(12,16,'../../uploads/terceros/contratos/1/','ccd_20220224205629_CC-10.pdf',1,1,'otro','2022-02-24 20:56:29',NULL,NULL,NULL),(13,17,'../../uploads/terceros/contratos/1/','ccd_20220225170938_CC-11.pdf',1,1,'otro','2022-02-25 17:09:38',NULL,NULL,NULL),(14,18,'../../uploads/terceros/contratos/22/','ccd_20220331163039_CC-12.pdf',1,22,'otro','2022-03-31 16:30:39',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `seg_contratos_enviados` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -194,7 +228,7 @@ CREATE TABLE `seg_cotiza_tercero` (
   PRIMARY KEY (`id_cot_ter`),
   KEY `id_tercero` (`id_tercero`),
   CONSTRAINT `seg_cotiza_tercero_ibfk_1` FOREIGN KEY (`id_tercero`) REFERENCES `seg_terceros` (`id_tercero`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=77 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -203,7 +237,7 @@ CREATE TABLE `seg_cotiza_tercero` (
 
 LOCK TABLES `seg_cotiza_tercero` WRITE;
 /*!40000 ALTER TABLE `seg_cotiza_tercero` DISABLE KEYS */;
-INSERT INTO `seg_cotiza_tercero` VALUES (55,3,'901045775',13,'ADQUISICION DE ELELEMENTOS DE OFICINAS','2','2022-02-03 14:53:54','2022-02-03 14:54:56'),(56,1,'901045775',13,'ADQUISICION DE ELELEMENTOS DE OFICINAS','2','2022-02-03 14:53:54','2022-02-03 14:56:31'),(57,1,'901045775',14,'ADQUISICION DE MEDICAMENTOS','2','2022-02-15 20:19:58','2022-02-15 20:20:48');
+INSERT INTO `seg_cotiza_tercero` VALUES (55,3,'901045775',13,'ADQUISICION DE ELELEMENTOS DE OFICINAS','2','2022-02-03 14:53:54','2022-02-03 14:54:56'),(56,1,'901045775',13,'ADQUISICION DE ELELEMENTOS DE OFICINAS','2','2022-02-03 14:53:54','2022-02-03 14:56:31'),(57,1,'901045775',14,'ADQUISICION DE MEDICAMENTOS','2','2022-02-15 20:19:58','2022-02-15 20:20:48'),(60,1,'901045775',15,'ADQUISICION DE INSUMOS MEDICOS','2','2022-02-24 20:52:02','2022-02-24 20:52:44'),(61,3,'901402281',16,'ADQUISICION DE INSUMOS MEDICOS','1','2022-02-25 16:50:47',NULL),(62,1,'901402281',16,'ADQUISICION DE INSUMOS MEDICOS','2','2022-02-25 16:50:47','2022-02-25 17:00:33'),(63,1,'901045775',17,'ADQUISICIÓN DE EQUIPOS DE COMPUTO PARA UN AREA DETERMINADA ','2','2022-03-31 16:16:23','2022-03-31 16:18:28'),(64,22,'901045775',17,'ADQUISICIÓN DE EQUIPOS DE COMPUTO PARA UN AREA DETERMINADA ','2','2022-03-31 16:16:23','2022-03-31 16:17:27'),(65,3,'901045775',18,'ADQUISICION DE MEDICAMENTOS','1','2022-04-19 16:55:26',NULL),(66,1,'901045775',18,'ADQUISICION DE MEDICAMENTOS','2','2022-04-19 16:55:26','2022-04-19 16:56:39'),(67,3,'901045775',19,'ADQUISICION DE ELELEMENTOS DE OFICINAS','1','2022-04-19 19:36:22',NULL),(68,1,'901045775',19,'ADQUISICION DE ELELEMENTOS DE OFICINAS','2','2022-04-19 19:36:22','2022-04-19 19:39:59'),(69,22,'901045775',19,'ADQUISICION DE ELELEMENTOS DE OFICINAS','1','2022-04-19 19:36:22',NULL),(70,3,'901045775',20,'ADQUISICION DE MEDICAMENTOS','1','2022-04-22 16:17:15',NULL),(71,1,'901045775',20,'ADQUISICION DE MEDICAMENTOS','2','2022-04-22 16:17:15','2022-04-22 16:18:04'),(74,3,'901045775',21,'ADQUISICION DE MEDICAMENTOS','1','2022-05-03 19:49:07',NULL),(75,1,'901045775',21,'ADQUISICION DE MEDICAMENTOS','2','2022-05-03 19:49:07','2022-05-03 19:49:36'),(76,22,'901045775',21,'ADQUISICION DE MEDICAMENTOS','1','2022-05-03 19:49:07',NULL);
 /*!40000 ALTER TABLE `seg_cotiza_tercero` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -225,7 +259,7 @@ CREATE TABLE `seg_cotizaciones` (
   `val_estimado_unid` decimal(15,2) DEFAULT NULL,
   `fec_reg` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id_cot`)
-) ENGINE=InnoDB AUTO_INCREMENT=138 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=166 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -234,7 +268,7 @@ CREATE TABLE `seg_cotizaciones` (
 
 LOCK TABLES `seg_cotizaciones` WRITE;
 /*!40000 ALTER TABLE `seg_cotizaciones` DISABLE KEYS */;
-INSERT INTO `seg_cotizaciones` VALUES (128,13,'901045775',85,3,'BOLÍGRAFO',100,470.00,'2022-02-03 14:53:54'),(129,13,'901045775',86,63,'BORRADOR',100,180.00,'2022-02-03 14:53:54'),(130,13,'901045775',87,61,'CARPETA',200,210.00,'2022-02-03 14:53:54'),(131,13,'901045775',88,69,'GRAPAS',20,650.00,'2022-02-03 14:53:54'),(132,13,'901045775',89,64,'MEMO',50,1000.00,'2022-02-03 14:53:54'),(133,13,'901045775',90,2,'RESMA DE PAPEL',12,11500.00,'2022-02-03 14:53:54'),(134,13,'901045775',91,62,'TIJERAS',50,1300.00,'2022-02-03 14:53:54'),(135,14,'901045775',92,1,'ACETAMINOFEN',100,0.00,'2022-02-15 20:19:58'),(136,14,'901045775',93,7,'DEXAMETAZONA',100,0.00,'2022-02-15 20:19:58'),(137,14,'901045775',94,4,'IBUPROFENO',100,0.00,'2022-02-15 20:19:58');
+INSERT INTO `seg_cotizaciones` VALUES (128,13,'901045775',85,3,'BOLÍGRAFO',100,470.00,'2022-02-03 14:53:54'),(129,13,'901045775',86,63,'BORRADOR',100,180.00,'2022-02-03 14:53:54'),(130,13,'901045775',87,61,'CARPETA',200,210.00,'2022-02-03 14:53:54'),(131,13,'901045775',88,69,'GRAPAS',20,650.00,'2022-02-03 14:53:54'),(132,13,'901045775',89,64,'MEMO',50,1000.00,'2022-02-03 14:53:54'),(133,13,'901045775',90,2,'RESMA DE PAPEL',12,11500.00,'2022-02-03 14:53:54'),(134,13,'901045775',91,62,'TIJERAS',50,1300.00,'2022-02-03 14:53:54'),(135,14,'901045775',92,1,'ACETAMINOFEN',100,0.00,'2022-02-15 20:19:58'),(136,14,'901045775',93,7,'DEXAMETAZONA',100,0.00,'2022-02-15 20:19:58'),(137,14,'901045775',94,4,'IBUPROFENO',100,0.00,'2022-02-15 20:19:58'),(139,15,'901045775',95,67,'ALGO',12,0.00,'2022-02-24 20:52:02'),(140,16,'901402281',96,67,'ALGO',22,0.00,'2022-02-25 16:50:47'),(141,17,'901045775',97,76,'ALTAVOCES ',2,0.00,'2022-03-31 16:16:23'),(142,17,'901045775',98,72,'COMPUTADOR DE MESA',2,0.00,'2022-03-31 16:16:23'),(143,17,'901045775',99,75,'MOUESE',3,0.00,'2022-03-31 16:16:23'),(144,17,'901045775',100,74,'MOUSE INALAMBRICO',4,0.00,'2022-03-31 16:16:23'),(145,17,'901045775',101,71,'PORTATIL ACER',1,0.00,'2022-03-31 16:16:23'),(146,18,'901045775',102,1,'ACETAMINOFEN',100,0.00,'2022-04-19 16:55:26'),(147,18,'901045775',103,7,'DEXAMETAZONA',100,0.00,'2022-04-19 16:55:26'),(148,18,'901045775',104,4,'IBUPROFENO',100,0.00,'2022-04-19 16:55:26'),(149,19,'901045775',105,3,'BOLÍGRAFO',10,0.00,'2022-04-19 19:36:22'),(150,19,'901045775',106,63,'BORRADOR',10,0.00,'2022-04-19 19:36:22'),(151,19,'901045775',107,68,'BORRADORES',10,0.00,'2022-04-19 19:36:22'),(152,19,'901045775',108,61,'CARPETA',10,0.00,'2022-04-19 19:36:22'),(153,19,'901045775',109,69,'GRAPAS',10,0.00,'2022-04-19 19:36:22'),(154,19,'901045775',110,64,'MEMO',10,0.00,'2022-04-19 19:36:22'),(155,19,'901045775',111,2,'RESMA DE PAPEL',10,0.00,'2022-04-19 19:36:22'),(156,19,'901045775',112,62,'TIJERAS',10,0.00,'2022-04-19 19:36:22'),(157,20,'901045775',113,1,'ACETAMINOFEN',100,0.00,'2022-04-22 16:17:15'),(158,20,'901045775',114,7,'DEXAMETAZONA',100,0.00,'2022-04-22 16:17:15'),(159,20,'901045775',115,4,'IBUPROFENO',100,0.00,'2022-04-22 16:17:15'),(163,21,'901045775',116,1,'ACETAMINOFEN',100,0.00,'2022-05-03 19:49:07'),(164,21,'901045775',117,7,'DEXAMETAZONA',100,0.00,'2022-05-03 19:49:07'),(165,21,'901045775',118,4,'IBUPROFENO',100,0.00,'2022-05-03 19:49:07');
 /*!40000 ALTER TABLE `seg_cotizaciones` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -292,7 +326,7 @@ CREATE TABLE `seg_docs_contrato` (
   KEY `id_tipo_doc` (`id_tipo_doc`),
   CONSTRAINT `seg_docs_contrato_ibfk_1` FOREIGN KEY (`id_c_env`) REFERENCES `seg_contratos_enviados` (`id_c_env`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `seg_docs_contrato_ibfk_2` FOREIGN KEY (`id_tipo_doc`) REFERENCES `seg_tipo_doc_soporte` (`id_doc_sop`)
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -301,7 +335,7 @@ CREATE TABLE `seg_docs_contrato` (
 
 LOCK TABLES `seg_docs_contrato` WRITE;
 /*!40000 ALTER TABLE `seg_docs_contrato` DISABLE KEYS */;
-INSERT INTO `seg_docs_contrato` VALUES (11,10,2,'','../../uploads/terceros/docs/1/','2_20220217215126_poliza.pdf',2,1,'otro','2022-02-03 15:13:53',20,'otro','2022-02-17 21:52:06'),(12,10,99,'DOCUMENTO','../../uploads/terceros/docs/1/','99_20220203190921_otro doc.pdf',2,1,'otro','2022-02-03 17:20:29',20,'otro','2022-02-17 21:30:59'),(13,10,99,'hhh','../../uploads/terceros/docs/1/','99_20220207151846_otro doc.pdf',3,1,'otro','2022-02-07 15:18:46',20,'otro','2022-02-17 21:33:02'),(16,10,98,'','../../uploads/terceros/docs/20/','98_20220218144025_acta designacion supervisor.pdf',1,20,'otro','2022-02-18 14:40:25',NULL,NULL,NULL),(28,11,98,'','../../uploads/terceros/docs/21/','98_20220218205746_acta designacion supervisor.pdf',1,21,'otro','2022-02-18 20:57:46',NULL,NULL,NULL);
+INSERT INTO `seg_docs_contrato` VALUES (11,10,2,'','../../uploads/terceros/docs/1/','2_20220217215126_poliza.pdf',2,1,'otro','2022-02-03 15:13:53',20,'otro','2022-02-17 21:52:06'),(12,10,99,'DOCUMENTO','../../uploads/terceros/docs/1/','99_20220203190921_otro doc.pdf',2,1,'otro','2022-02-03 17:20:29',20,'otro','2022-02-17 21:30:59'),(13,10,99,'FFF','../../uploads/terceros/docs/1/','99_20220223193856_hhh.pdf',3,1,'otro','2022-02-07 15:18:46',20,'otro','2022-02-26 17:20:21'),(16,10,98,'','../../uploads/terceros/docs/20/','98_20220218144025_acta designacion supervisor.pdf',1,20,'otro','2022-02-18 14:40:25',NULL,NULL,NULL),(28,11,98,'','../../uploads/terceros/docs/21/','98_20220218205746_acta designacion supervisor.pdf',1,21,'otro','2022-02-18 20:57:46',NULL,NULL,NULL),(29,14,98,'','../../uploads/terceros/docs/20/','98_20220331164251_supervisor.pdf',1,20,'otro','2022-03-31 16:42:51',NULL,NULL,NULL),(30,12,98,'','../../uploads/terceros/docs/12/','98_20220503133209_Tu pasabordo - 2022-04-29T160625.520 (1).pdf',1,12,'otro','2022-05-03 13:32:09',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `seg_docs_contrato` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -331,7 +365,7 @@ CREATE TABLE `seg_docs_tercero` (
   KEY `ID_TIPODOCS` (`id_tipo_doc`),
   CONSTRAINT `ID_TERCERODOCS` FOREIGN KEY (`id_tercero`) REFERENCES `seg_terceros` (`id_tercero`),
   CONSTRAINT `ID_TIPODOCS` FOREIGN KEY (`id_tipo_doc`) REFERENCES `seg_tipo_docs_tercero` (`id_doc`)
-) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -340,7 +374,7 @@ CREATE TABLE `seg_docs_tercero` (
 
 LOCK TABLES `seg_docs_tercero` WRITE;
 /*!40000 ALTER TABLE `seg_docs_tercero` DISABLE KEYS */;
-INSERT INTO `seg_docs_tercero` VALUES (37,1,1,'2021-10-01','2022-10-31','../../uploads/terceros/docs/1/','1_20211007163122_cedula.pdf',1,'otro','2021-10-07 16:31:22',1,'otro','2021-10-07 16:37:13'),(41,1,2,'2022-01-01','2022-01-31','../../uploads/terceros/docs/1/','2_20220118204448_rut.pdf',1,'otro','2022-01-18 20:44:48',NULL,NULL,NULL),(42,3,1,'2022-01-01','2022-01-27','../../uploads/terceros/docs/3/','1_20220126223304_cedula.pdf',3,'otro','2022-01-26 22:33:04',NULL,NULL,NULL);
+INSERT INTO `seg_docs_tercero` VALUES (37,1,1,'2021-10-01','2022-10-31','../../uploads/terceros/docs/1/','1_20211007163122_cedula.pdf',1,'otro','2021-10-07 16:31:22',1,'otro','2021-10-07 16:37:13'),(41,1,2,'2022-01-01','2022-01-31','../../uploads/terceros/docs/1/','2_20220118204448_rut.pdf',1,'otro','2022-01-18 20:44:48',NULL,NULL,NULL),(42,3,1,'2022-01-01','2022-01-27','../../uploads/terceros/docs/3/','1_20220126223304_cedula.pdf',3,'otro','2022-01-26 22:33:04',NULL,NULL,NULL),(43,12,1,'2022-04-19','2022-04-30','../../uploads/terceros/docs/12/','1_20220429134721_Invoice_74852689.PDF',12,'otro','2022-04-19 16:40:45',12,'otro','2022-04-29 13:47:21'),(44,12,2,'2022-04-01','2022-04-30','../../uploads/terceros/docs/12/','2_20220429134442_vacunasFizer.pdf',12,'otro','2022-04-29 13:44:42',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `seg_docs_tercero` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -377,7 +411,7 @@ CREATE TABLE `seg_empresas` (
   CONSTRAINT `FK_IDCITYEMPRESA` FOREIGN KEY (`id_ciudad`) REFERENCES `seg_municipios` (`id_municipio`),
   CONSTRAINT `FK_IDDPTOEMPRESA` FOREIGN KEY (`id_dpto`) REFERENCES `seg_departamento` (`id_dpto`),
   CONSTRAINT `FK_IDPAISEMPRESA` FOREIGN KEY (`id_pais`) REFERENCES `seg_pais` (`id_pais`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -386,8 +420,43 @@ CREATE TABLE `seg_empresas` (
 
 LOCK TABLES `seg_empresas` WRITE;
 /*!40000 ALTER TABLE `seg_empresas` DISABLE KEYS */;
-INSERT INTO `seg_empresas` VALUES (1,'901045775','1','facturaciongastrocenter1@gmail.com','7753589','IPS GASTROCENTER',1,17,759,'CLL 10 # 5 - 54 PLAZA CENTRO','1','2022-01-11 20:29:37',NULL),(2,'801045776','2','correoprueba@correo.com','7732223','ESE DE PRUEBA',1,17,759,'CRA 6 # 3 - 25','1','2022-01-12 16:53:34',NULL);
+INSERT INTO `seg_empresas` VALUES (1,'901045775','1','facturaciongastrocenter1@gmail.com','7753589','IPS GASTROCENTER',1,17,759,'CLL 10 # 5 - 54 PLAZA CENTRO','1','2022-01-11 20:29:37',NULL),(2,'801045776','2','correoprueba@correo.com','7732223','ESE DE PRUEBA',1,17,759,'CRA 6 # 3 - 25','1','2022-01-12 16:53:34',NULL),(3,'901402281','1','correo@correo.com','7777777','TAXXA',1,17,759,'CRA 6 # 3 - 25','1','2022-02-25 16:49:39',NULL);
 /*!40000 ALTER TABLE `seg_empresas` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `seg_entrega_compra`
+--
+
+DROP TABLE IF EXISTS `seg_entrega_compra`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `seg_entrega_compra` (
+  `id_entrega` int(11) NOT NULL AUTO_INCREMENT,
+  `id_prod` int(11) DEFAULT NULL,
+  `cantidad` int(11) DEFAULT NULL,
+  `cant_inicial` int(11) DEFAULT NULL,
+  `estado` smallint(1) DEFAULT '0',
+  `id_user_reg` int(11) DEFAULT NULL,
+  `tipo_user_reg` char(5) DEFAULT NULL,
+  `fec_reg` timestamp NULL DEFAULT NULL,
+  `id_user_act` int(11) DEFAULT NULL,
+  `tipo_user_act` char(5) DEFAULT NULL,
+  `fec_act` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id_entrega`),
+  KEY `id_prod` (`id_prod`),
+  CONSTRAINT `seg_entrega_compra_ibfk_1` FOREIGN KEY (`id_prod`) REFERENCES `seg_valor_cotizacion` (`id_val_cot`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=86 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `seg_entrega_compra`
+--
+
+LOCK TABLES `seg_entrega_compra` WRITE;
+/*!40000 ALTER TABLE `seg_entrega_compra` DISABLE KEYS */;
+INSERT INTO `seg_entrega_compra` VALUES (50,109,20,20,1,1,'otro','2022-03-02 16:42:01',1,'user','2022-03-07 21:31:21'),(51,108,10,10,1,1,'otro','2022-03-02 16:42:01',1,'user','2022-03-07 17:34:48'),(52,107,30,40,2,1,'otro','2022-03-02 16:42:01',1,'user','2022-03-07 21:14:41'),(53,106,10,10,1,1,'otro','2022-03-02 16:42:01',1,'user','2022-03-07 19:21:25'),(54,105,100,100,1,1,'otro','2022-03-02 16:42:01',1,'user','2022-03-07 19:18:44'),(55,104,45,50,2,1,'otro','2022-03-02 16:42:01',1,'user','2022-03-07 21:15:01'),(56,103,40,50,2,1,'otro','2022-03-02 16:42:01',1,'user','2022-03-07 19:13:37'),(57,109,30,30,1,1,'otro','2022-03-07 21:39:56',1,'user','2022-03-07 21:59:28'),(58,108,2,2,1,1,'otro','2022-03-07 21:39:56',1,'user','2022-03-07 21:53:27'),(59,107,10,20,2,1,'otro','2022-03-07 21:39:56',1,'user','2022-03-07 22:03:43'),(60,106,5,10,2,1,'otro','2022-03-07 21:39:56',1,'user','2022-03-07 22:06:23'),(61,105,90,100,2,1,'otro','2022-03-07 21:39:56',1,'user','2022-03-07 21:55:41'),(62,104,50,55,2,1,'otro','2022-03-07 21:39:56',1,'user','2022-03-07 22:01:22'),(63,103,30,60,2,1,'otro','2022-03-07 21:39:56',1,'user','2022-03-07 21:53:42'),(64,109,0,0,0,1,'otro','2022-03-07 22:08:23',NULL,NULL,NULL),(65,108,0,0,0,1,'otro','2022-03-07 22:08:23',NULL,NULL,NULL),(66,107,5,10,2,1,'otro','2022-03-07 22:08:23',1,'user','2022-03-07 22:20:17'),(67,106,5,5,1,1,'otro','2022-03-07 22:08:23',1,'user','2022-03-07 22:21:54'),(68,105,5,10,2,1,'otro','2022-03-07 22:08:23',1,'user','2022-03-07 22:14:07'),(69,104,5,5,1,1,'otro','2022-03-07 22:08:23',1,'user','2022-03-07 22:20:04'),(70,103,20,30,2,1,'otro','2022-03-07 22:08:23',1,'user','2022-03-07 22:12:36'),(71,109,0,0,0,1,'otro','2022-03-07 22:21:12',NULL,NULL,NULL),(72,108,0,0,0,1,'otro','2022-03-07 22:21:12',NULL,NULL,NULL),(73,107,2,5,2,1,'otro','2022-03-07 22:21:12',1,'user','2022-03-23 15:29:51'),(74,106,0,0,0,1,'otro','2022-03-07 22:21:12',NULL,NULL,NULL),(75,105,2,5,2,1,'otro','2022-03-07 22:21:12',1,'user','2022-03-11 15:22:48'),(76,104,0,0,0,1,'otro','2022-03-07 22:21:12',NULL,NULL,NULL),(77,103,10,10,1,1,'otro','2022-03-07 22:21:12',1,'user','2022-03-08 22:19:12'),(78,112,50,50,1,1,'otro','2022-03-23 15:32:14',1,'user','2022-03-23 15:35:40'),(79,111,20,50,2,1,'otro','2022-03-23 15:32:14',1,'user','2022-03-23 15:36:21'),(80,110,20,50,2,1,'otro','2022-03-23 15:32:14',1,'user','2022-03-23 15:33:39'),(81,119,1,1,1,22,'otro','2022-03-31 16:32:21',1,'user','2022-04-07 14:04:04'),(82,118,2,4,2,22,'otro','2022-03-31 16:32:21',1,'user','2022-04-07 20:52:05'),(83,117,3,3,1,22,'otro','2022-03-31 16:32:21',1,'user','2022-04-06 21:15:36'),(84,116,2,2,1,22,'otro','2022-03-31 16:32:21',1,'user','2022-04-06 21:08:07'),(85,115,2,2,1,22,'otro','2022-03-31 16:32:21',1,'user','2022-04-06 21:23:42');
+/*!40000 ALTER TABLE `seg_entrega_compra` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -446,7 +515,7 @@ CREATE TABLE `seg_novedad_contrato_adi_pror` (
   KEY `id_contrato` (`id_contrato`),
   CONSTRAINT `seg_novedad_contrato_adi_pror_ibfk_1` FOREIGN KEY (`id_tip_nov`) REFERENCES `seg_tipo_novedad_contrato` (`id_novedad`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `seg_novedad_contrato_adi_pror_ibfk_2` FOREIGN KEY (`id_contrato`) REFERENCES `seg_contratos_enviados` (`id_c_env`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -455,7 +524,7 @@ CREATE TABLE `seg_novedad_contrato_adi_pror` (
 
 LOCK TABLES `seg_novedad_contrato_adi_pror` WRITE;
 /*!40000 ALTER TABLE `seg_novedad_contrato_adi_pror` DISABLE KEYS */;
-INSERT INTO `seg_novedad_contrato_adi_pror` VALUES (18,1,10,30000.00,'2022-02-15',1,NULL,NULL,'cambio de prórroga a adición',1,'user','2022-02-14 19:50:26',1,'user','2022-02-15 14:07:52'),(19,3,10,1000.00,'2022-02-14',1,'2022-02-14','2022-03-01','',1,'user','2022-02-14 19:50:50',1,'user','2022-02-15 13:15:40');
+INSERT INTO `seg_novedad_contrato_adi_pror` VALUES (18,1,10,30000.00,'2022-02-15',1,NULL,NULL,'cambio de prórroga a adición',1,'user','2022-02-14 19:50:26',1,'user','2022-02-15 14:07:52'),(19,3,10,1000.00,'2022-02-14',1,'2022-02-14','2022-03-01','',1,'user','2022-02-14 19:50:50',1,'user','2022-02-15 13:15:40'),(20,1,10,1111111.00,'2022-02-23',1,NULL,NULL,'1weqw',1,'user','2022-02-23 20:58:22',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `seg_novedad_contrato_adi_pror` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -601,7 +670,7 @@ CREATE TABLE `seg_novedad_contrato_suspension` (
   KEY `id_tipo_nov` (`id_tipo_nov`),
   CONSTRAINT `seg_novedad_contrato_suspension_ibfk_1` FOREIGN KEY (`id_contrato`) REFERENCES `seg_contratos_enviados` (`id_c_env`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `seg_novedad_contrato_suspension_ibfk_2` FOREIGN KEY (`id_tipo_nov`) REFERENCES `seg_tipo_novedad_contrato` (`id_novedad`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -610,7 +679,7 @@ CREATE TABLE `seg_novedad_contrato_suspension` (
 
 LOCK TABLES `seg_novedad_contrato_suspension` WRITE;
 /*!40000 ALTER TABLE `seg_novedad_contrato_suspension` DISABLE KEYS */;
-INSERT INTO `seg_novedad_contrato_suspension` VALUES (10,10,5,'2022-02-01','2022-02-17','',1,'user','2022-02-14 21:27:02',NULL,NULL,NULL),(11,10,5,'2022-02-18','2022-02-20','',1,'user','2022-02-15 14:39:15',1,'user','2022-02-15 15:11:33');
+INSERT INTO `seg_novedad_contrato_suspension` VALUES (10,10,5,'2022-02-01','2022-02-17','',1,'user','2022-02-14 21:27:02',NULL,NULL,NULL),(11,10,5,'2022-02-18','2022-02-20','',1,'user','2022-02-15 14:39:15',1,'user','2022-02-15 15:11:33'),(12,10,5,'2022-02-23','2022-02-28','',1,'user','2022-02-23 20:59:18',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `seg_novedad_contrato_suspension` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -704,7 +773,7 @@ CREATE TABLE `seg_responsabilidades_terceros` (
   KEY `ID_USERACTURESPTRIB` (`id_user_act`),
   CONSTRAINT `ID_RESPTRIBUTARIA` FOREIGN KEY (`id_responsabilidad`) REFERENCES `seg_responsabilidades_tributarias` (`id_responsabilidad`),
   CONSTRAINT `ID_TERCERO` FOREIGN KEY (`id_tercero`) REFERENCES `seg_terceros` (`id_tercero`)
-) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -713,7 +782,7 @@ CREATE TABLE `seg_responsabilidades_terceros` (
 
 LOCK TABLES `seg_responsabilidades_terceros` WRITE;
 /*!40000 ALTER TABLE `seg_responsabilidades_terceros` DISABLE KEYS */;
-INSERT INTO `seg_responsabilidades_terceros` VALUES (1,1,38,1,1,'user',NULL,'2021-09-17 14:48:28',1,'otro',NULL,'2021-10-01 20:51:30'),(2,1,35,1,1,'user',NULL,'2021-09-17 14:48:57',1,'otro',NULL,'2021-10-05 13:49:16'),(6,3,38,1,1,NULL,NULL,'2021-09-21 14:13:53',3,'otro',NULL,'2021-10-04 17:01:52'),(12,11,10,1,11,'otro',NULL,'2021-09-21 19:56:40',NULL,NULL,NULL,NULL),(13,11,9,1,11,'otro',NULL,'2021-09-21 19:56:48',NULL,NULL,NULL,NULL),(15,10,18,1,1,'user',NULL,'2021-09-23 22:57:50',1,'user',NULL,'2021-09-23 22:57:53'),(17,3,37,1,1,'user',NULL,'2021-09-24 16:32:48',3,'otro',NULL,'2021-10-04 17:01:51'),(21,1,18,1,1,'user','8001234323','2021-09-29 17:10:55',1,'otro',NULL,'2021-10-06 21:06:08'),(26,1,3,1,1,'user','8001234323','2021-09-29 21:11:55',1,'otro',NULL,'2021-10-18 15:42:10'),(27,1,6,1,1,'otro',NULL,'2021-09-29 21:32:09',1,'otro',NULL,'2021-10-18 15:42:05'),(28,1,10,1,1,'otro',NULL,'2021-09-29 22:17:39',1,'otro',NULL,'2021-10-18 15:42:04'),(29,1,19,1,1,'user','8001234323','2021-09-30 15:35:17',1,'otro',NULL,'2021-10-06 21:06:09'),(31,19,18,1,19,'otro',NULL,'2021-10-01 21:04:28',NULL,NULL,NULL,NULL),(32,3,10,1,1,'user','8001234323','2021-10-01 22:02:39',NULL,NULL,NULL,NULL),(33,3,20,1,1,'user','8001234323','2021-10-05 17:02:31',NULL,NULL,NULL,NULL),(34,3,36,1,1,'user','8001234323','2021-10-05 17:02:58',NULL,NULL,NULL,NULL),(35,1,11,1,1,'otro','1085907600','2021-10-06 17:04:02',1,'otro',NULL,'2021-10-06 21:06:07'),(36,1,31,1,1,'otro','1085907600','2021-10-06 17:04:47',NULL,NULL,NULL,NULL),(37,1,36,1,1,'otro','1085907600','2021-10-06 17:05:04',NULL,NULL,NULL,NULL),(40,1,4,1,1,'otro','1085907600','2021-10-06 17:07:18',1,'otro',NULL,'2021-10-18 15:42:09'),(41,3,17,1,1,'user','8001234323','2021-10-07 19:46:45',NULL,NULL,NULL,NULL),(42,3,18,1,1,'user','8001234323','2021-10-07 19:52:13',NULL,NULL,NULL,NULL),(43,1,17,1,1,'otro','1085907600','2021-10-07 22:34:19',NULL,NULL,NULL,NULL);
+INSERT INTO `seg_responsabilidades_terceros` VALUES (1,1,38,1,1,'user',NULL,'2021-09-17 14:48:28',1,'otro',NULL,'2021-10-01 20:51:30'),(2,1,35,1,1,'user',NULL,'2021-09-17 14:48:57',1,'otro',NULL,'2021-10-05 13:49:16'),(6,3,38,1,1,NULL,NULL,'2021-09-21 14:13:53',3,'otro',NULL,'2021-10-04 17:01:52'),(12,11,10,1,11,'otro',NULL,'2021-09-21 19:56:40',NULL,NULL,NULL,NULL),(13,11,9,1,11,'otro',NULL,'2021-09-21 19:56:48',NULL,NULL,NULL,NULL),(15,10,18,1,1,'user',NULL,'2021-09-23 22:57:50',1,'user',NULL,'2021-09-23 22:57:53'),(17,3,37,1,1,'user',NULL,'2021-09-24 16:32:48',3,'otro',NULL,'2021-10-04 17:01:51'),(21,1,18,1,1,'user','8001234323','2021-09-29 17:10:55',1,'otro',NULL,'2021-10-06 21:06:08'),(26,1,3,1,1,'user','8001234323','2021-09-29 21:11:55',1,'otro',NULL,'2021-10-18 15:42:10'),(27,1,6,1,1,'otro',NULL,'2021-09-29 21:32:09',1,'otro',NULL,'2021-10-18 15:42:05'),(28,1,10,1,1,'otro',NULL,'2021-09-29 22:17:39',1,'otro',NULL,'2021-10-18 15:42:04'),(29,1,19,1,1,'user','8001234323','2021-09-30 15:35:17',1,'otro',NULL,'2021-10-06 21:06:09'),(31,19,18,1,19,'otro',NULL,'2021-10-01 21:04:28',NULL,NULL,NULL,NULL),(32,3,10,1,1,'user','8001234323','2021-10-01 22:02:39',NULL,NULL,NULL,NULL),(33,3,20,1,1,'user','8001234323','2021-10-05 17:02:31',NULL,NULL,NULL,NULL),(34,3,36,1,1,'user','8001234323','2021-10-05 17:02:58',NULL,NULL,NULL,NULL),(35,1,11,1,1,'otro','1085907600','2021-10-06 17:04:02',1,'otro',NULL,'2021-10-06 21:06:07'),(36,1,31,1,1,'otro','1085907600','2021-10-06 17:04:47',NULL,NULL,NULL,NULL),(37,1,36,1,1,'otro','1085907600','2021-10-06 17:05:04',NULL,NULL,NULL,NULL),(40,1,4,0,1,'otro','1085907600','2021-10-06 17:07:18',1,'otro',NULL,'2022-04-22 16:12:47'),(41,3,17,1,1,'user','8001234323','2021-10-07 19:46:45',NULL,NULL,NULL,NULL),(42,3,18,1,1,'user','8001234323','2021-10-07 19:52:13',NULL,NULL,NULL,NULL),(43,1,17,1,1,'otro','1085907600','2021-10-07 22:34:19',NULL,NULL,NULL,NULL),(44,21,11,1,1,'user','901045775','2022-03-25 16:22:12',NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `seg_responsabilidades_terceros` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -798,7 +867,7 @@ CREATE TABLE `seg_supervisor_designado` (
   KEY `id_terceros` (`id_tercero`),
   CONSTRAINT `seg_supervisor_designado_ibfk_1` FOREIGN KEY (`id_tercero`) REFERENCES `seg_terceros` (`id_tercero`),
   CONSTRAINT `seg_supervisor_designado_ibfk_2` FOREIGN KEY (`id_contrato`) REFERENCES `seg_contratos_enviados` (`id_c_env`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -807,7 +876,7 @@ CREATE TABLE `seg_supervisor_designado` (
 
 LOCK TABLES `seg_supervisor_designado` WRITE;
 /*!40000 ALTER TABLE `seg_supervisor_designado` DISABLE KEYS */;
-INSERT INTO `seg_supervisor_designado` VALUES (7,20,10,'2022-02-16','xxxsas','../../uploads/terceros/docs/20/','ads_20220217140833_supervision.pdf','2',1,'user','2022-02-16 13:57:35',20,'otro','2022-02-18 14:52:24'),(8,21,11,'2022-02-17','desss','../../uploads/terceros/docs/21/','ads_20220217142655_supervision.pdf','2',1,'user','2022-02-17 14:26:36',21,'otro','2022-02-18 20:57:46');
+INSERT INTO `seg_supervisor_designado` VALUES (7,20,10,'2022-02-16','xxxsas','../../uploads/terceros/docs/20/','ads_20220217140833_supervision.pdf','2',1,'user','2022-02-16 13:57:35',20,'otro','2022-02-18 14:52:24'),(8,21,11,'2022-02-17','desss','../../uploads/terceros/docs/21/','ads_20220217142655_supervision.pdf','2',1,'user','2022-02-17 14:26:36',21,'otro','2022-02-18 20:57:46'),(9,12,12,'2022-02-24','ASDASD','../../uploads/terceros/docs/12/','ads_20220224205748_designacion de supervision.pdf','2',1,'user','2022-02-24 20:56:55',12,'otro','2022-05-03 13:32:09'),(10,12,13,'2022-02-28','',NULL,NULL,'1',1,'user','2022-02-25 17:10:26',NULL,NULL,NULL),(11,20,14,'2022-03-31','',NULL,NULL,'2',1,'user','2022-03-31 16:30:58',20,'otro','2022-03-31 16:42:51');
 /*!40000 ALTER TABLE `seg_supervisor_designado` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -856,7 +925,7 @@ CREATE TABLE `seg_terceros` (
   CONSTRAINT `ID_MUNICIPIOTERCERO` FOREIGN KEY (`municipio`) REFERENCES `seg_municipios` (`id_municipio`),
   CONSTRAINT `ID_PAISTERCERO` FOREIGN KEY (`pais`) REFERENCES `seg_pais` (`id_pais`),
   CONSTRAINT `ID_TIPODOCUMENTOTER` FOREIGN KEY (`tipo_doc`) REFERENCES `seg_tipos_documento` (`id_tipodoc`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -865,7 +934,7 @@ CREATE TABLE `seg_terceros` (
 
 LOCK TABLES `seg_terceros` WRITE;
 /*!40000 ALTER TABLE `seg_terceros` DISABLE KEYS */;
-INSERT INTO `seg_terceros` VALUES (1,1,'1085907600','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','CHITAN','CORAL','EDWIN ','ALBEIRO ','LC&M',1,17,774,'Calle 10 # 5 - 60','3165479602','contactenos@lcm.com','NA','1986-05-14',1,'user','8001234323','2021-09-15 18:34:36',1,'otro','8001234323','2022-01-26 17:12:28'),(3,1,'1085907468','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','MEDINA','RIOS','ALMA','MARIA','',1,14,672,'Calle 3 # 14-  39','3153421213','alma@correo.com','F','1990-03-16',1,'user','8001234323','2021-09-16 23:10:06',3,'otro','1085907468','2022-02-01 16:49:09'),(5,5,'8003452345','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','','','','','Una empresa',1,17,759,'Av. Siempre viva','3008843301','eachitanc@gmail.com','NA','2018-01-01',1,'user','8001234323','2021-09-20 17:11:53',0,NULL,NULL,'2021-09-20 22:04:20'),(9,1,'8004320321','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','','','','','EMPRESA DE PRUEBA',1,26,1083,'Calle 3 # 14-  40','3153421212','correo@correo.com','NA','2016-01-01',1,'user','8001234323','2021-09-21 19:32:39',NULL,NULL,NULL,NULL),(10,5,'8001234561','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','','','','','EMPRESA DE PRUEBA',1,13,638,'Calle 3 # 14-  40','3153421212','correo@correo.com','NA','2015-01-01',1,'user','8001234323','2021-09-21 19:43:10',NULL,NULL,NULL,NULL),(11,5,'8001236540','d404559f602eab6fd602ac7680dacbfaadd13630335e951f097af3900e9de176b6db28512f2e000b9d04fba5133e8b1c6e8df59db3a8ab9d60be4b97cc9e81db','','','','','OTRA EMPRESA',1,14,672,'Calle 3 # 14-  42','3153421214','correo@correo.com','NA','2014-01-01',1,'user','8001234323','2021-09-21 19:48:16',11,'otro',NULL,'2021-09-21 19:53:42'),(12,2,'1085907601','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','','','RSSSS','','Empresa API',1,17,782,'Calle 3 22','3008843302','correo@correo.com','NA','2018-05-24',1,'user','8001234323','2021-09-28 20:06:11',1,'user','901045775','2022-02-16 14:26:35'),(19,5,'8009329320','7bd57a0c7b8ac25cbfa18ffdb4f37ee664d3e94956545e1cab302294be399d01dc88bfbabe30668d9a76fe93b4f0eba1cffc4f546a3c861ba3f09311cc2438c1','','','','','OTRA EMPRESA api',1,17,753,'Calle 3 # 14-  40','3153421212','correo@correoapi.com','NA','2017-01-01',1,'user','8001234323','2021-09-28 22:36:35',1,'user','8001234323','2021-09-29 17:00:38'),(20,1,'1085907000','5d8bb01d731e383670d004fe5f12d9fddd1e2f500e587dcd25603d3a00688239d30527dc7b5becfa218b0966762a23a14180e94dc76216d1205b9002735770e1','PRUEBA','UNO','SUPERVISOR','DE','',1,17,759,'Calle 33 # 23-  433','3423454556','correo@supervisor.com','M','1990-02-15',1,'user','901045775','2022-02-15 19:44:37',NULL,NULL,NULL,NULL),(21,1,'1085900000','54d482d6e0638994cda75262fd507b98b454e958bbe3e61b23e6276b6aa68acf48ebcb4282b403ebbd7042ccf21439b3b7fe9f7f88ebac671c064628c6f882e7','PRUEBA2','PRUEBA','PRUEBA2','PRUEBA','',1,13,638,'Calle 3 # 14-  42','3153421214','pruebasupe2@correo.com','F','2012-02-01',1,'user','901045775','2022-02-15 22:51:17',NULL,NULL,NULL,NULL);
+INSERT INTO `seg_terceros` VALUES (1,1,'1085907600','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','CHITAN','CORAL','EDWIN ','ALBEIRO ','LC&M',1,17,774,'Calle 10 # 5 - 60','3165479602','contactenos@lcm.com','NA','1986-05-14',1,'user','8001234323','2021-09-15 18:34:36',1,'otro','8001234323','2022-01-26 17:12:28'),(3,1,'1085907468','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','MEDINA','RIOS','ALMA','MARIA','',1,14,672,'Calle 3 # 14-  39','3153421213','alma@correo.com','F','1990-03-16',1,'user','8001234323','2021-09-16 23:10:06',3,'otro','1085907468','2022-02-01 16:49:09'),(5,5,'8003452345','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','','','','','Una empresa',1,17,759,'Av. Siempre viva','3008843301','eachitanc@gmail.com','NA','2018-01-01',1,'user','8001234323','2021-09-20 17:11:53',0,NULL,NULL,'2021-09-20 22:04:20'),(9,1,'8004320321','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','','','','','EMPRESA DE PRUEBA',1,26,1083,'Calle 3 # 14-  40','3153421212','correo@correo.com','NA','2016-01-01',1,'user','8001234323','2021-09-21 19:32:39',NULL,NULL,NULL,NULL),(10,5,'8001234561','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','','','','','EMPRESA DE PRUEBA',1,13,638,'Calle 3 # 14-  40','3153421212','correo@correo.com','NA','2015-01-01',1,'user','8001234323','2021-09-21 19:43:10',NULL,NULL,NULL,NULL),(11,5,'8001236540','d404559f602eab6fd602ac7680dacbfaadd13630335e951f097af3900e9de176b6db28512f2e000b9d04fba5133e8b1c6e8df59db3a8ab9d60be4b97cc9e81db','','','','','OTRA EMPRESA',1,14,672,'Calle 3 # 14-  42','3153421214','correo@correo.com','NA','2014-01-01',1,'user','8001234323','2021-09-21 19:48:16',11,'otro',NULL,'2021-09-21 19:53:42'),(12,2,'1085907601','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','','','RSSSS','','Empresa API',1,17,782,'Calle 3 22','3008843302','correo@correo.com','NA','2018-05-24',1,'user','8001234323','2021-09-28 20:06:11',1,'user','901045775','2022-02-16 14:26:35'),(19,5,'8009329320','7bd57a0c7b8ac25cbfa18ffdb4f37ee664d3e94956545e1cab302294be399d01dc88bfbabe30668d9a76fe93b4f0eba1cffc4f546a3c861ba3f09311cc2438c1','','','','','OTRA EMPRESA api',1,17,753,'Calle 3 # 14-  40','3153421212','correo@correoapi.com','NA','2017-01-01',1,'user','8001234323','2021-09-28 22:36:35',1,'user','8001234323','2021-09-29 17:00:38'),(20,1,'1085907000','5d8bb01d731e383670d004fe5f12d9fddd1e2f500e587dcd25603d3a00688239d30527dc7b5becfa218b0966762a23a14180e94dc76216d1205b9002735770e1','PRUEBA','UNO','SUPERVISOR','DE','',1,17,759,'Calle 33 # 23-  433','3423454556','correo@supervisor.com','M','1990-02-15',1,'user','901045775','2022-02-15 19:44:37',NULL,NULL,NULL,NULL),(21,1,'1085900000','54d482d6e0638994cda75262fd507b98b454e958bbe3e61b23e6276b6aa68acf48ebcb4282b403ebbd7042ccf21439b3b7fe9f7f88ebac671c064628c6f882e7','PRUEBA2','PRUEBA','PRUEBA2','PRUEBA','',1,13,638,'Calle 3 # 14-  42','3153421214','pruebasupe2@correo.com','F','2012-02-01',1,'user','901045775','2022-02-15 22:51:17',NULL,NULL,NULL,NULL),(22,5,'8000','a2812b1dc3c6d1468006948b0f1cd59a0a5467b97e29b985a7c3fc5d27e7769d2b4765dc65545a1102455416311945dd5a52014bbc129b2cc2e040da14fc8636','','','','','EMPRESA DE TECNOLOGIA',1,3,160,'Calle 3 # 14-  42','77302432','correo@correo.com','NA','2022-03-31',1,'user','901045775','2022-03-31 15:41:24',NULL,NULL,NULL,NULL),(23,1,'1085907418','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','CHITAN','CORAL','ALBEIRO','EDWIN','',1,17,759,'Vereda las Animas','3008843301','eachitanc@gmail.com','M',NULL,1,'user','901045775','2022-02-15 19:44:37',NULL,NULL,NULL,NULL),(24,1,'1085907435','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','APELLIDO','APELLIDO','PRUEBA','PRUEBA','',1,17,759,'DIRECCION','3008843302','correo@gmail.com','M',NULL,1,'user','901045775','2022-02-15 19:44:37',NULL,NULL,NULL,NULL),(25,1,'11111111111','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','APELLIDO2','APELLIDO2','PREUBA2','PRUEBA2','',1,17,759,'CALLE 2','3008843303','correo@gmail.com','M',NULL,1,'user','901045775','2022-02-15 19:44:37',NULL,NULL,NULL,NULL),(26,1,'1085907400','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','OTRO','MAS','EMPLEADO','TRABAJADOR','',1,17,759,'AV SIEMPRE VIVA','3008843304','correo@gmail.com','M',NULL,1,'user','901045775','2022-02-15 19:44:37',NULL,NULL,NULL,NULL),(27,1,'1085999901','19b7677377537b4be739f5e1e414ad45f0065be22ee623b0d23298708508967d3d2c781a31223c05d218e73a55d5345b15c0d5a9336609f0d4a27ef4f8161c14','Perez','Salazar','Carlos','Antonio','',1,17,745,'Calle 3 # 14-  42','3423454556','mail@correo.com','M','1970-01-01',1,'user','901045775','2022-04-27 19:40:53',NULL,NULL,NULL,NULL),(28,1,'1085999902','b9e22241fb3ec74e47174123f8286b488a3f175c892106afe07de850b0daa39f393f15673843bb5a1e4734472adaf49932aa9e0f94c8c6a9e91088294688217d','Perez','Salazar','Carlos','Antonio','',1,17,745,'Calle 3 # 14-  42','12312313','mail@correo.com','M','1970-01-01',1,'user','901045775','2022-04-27 19:50:35',NULL,NULL,NULL,NULL),(29,5,'8000444211','11240f5c39847358230b6fd7d1bcfb3a656408779e83eb26004c138ea69d29676c06ad9fff6c85d7f605cb3d063353770afbb171918c826660f618d882e6ca46','','','','','SUPERVISORES S.A.S',1,3,157,'Calle 3 # 14-  42','12312313','mail@correo.com','NA','2022-03-31',1,'user','901045775','2022-04-28 13:42:58',NULL,NULL,NULL,NULL),(35,1,'1085900429','3627909a29c31381a071ec27f7c9ca97726182aed29a7ddd2e54353322cfb30abb9e3a6df2ac2c20fe23436311d678564d0c8d305930575f60e2d3d048184d79','DELGADO','DIAZ','RAUL','SANTIAGO','',1,3,157,'Calle 3 # 14-  42','3423454556','mail@correo.com','M',NULL,1,'user','901402281','2022-06-29 20:19:54',NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `seg_terceros` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -902,9 +971,9 @@ DROP TABLE IF EXISTS `seg_tipo_docs_tercero`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `seg_tipo_docs_tercero` (
   `id_doc` int(11) NOT NULL AUTO_INCREMENT,
-  `descripcion` varchar(50) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL,
+  `descripcion` varchar(100) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL,
   PRIMARY KEY (`id_doc`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -913,7 +982,7 @@ CREATE TABLE `seg_tipo_docs_tercero` (
 
 LOCK TABLES `seg_tipo_docs_tercero` WRITE;
 /*!40000 ALTER TABLE `seg_tipo_docs_tercero` DISABLE KEYS */;
-INSERT INTO `seg_tipo_docs_tercero` VALUES (1,'CEDULA'),(2,'RUT');
+INSERT INTO `seg_tipo_docs_tercero` VALUES (1,'CEDULA'),(2,'RUT ACTUALIZADO'),(3,'PROPUESTA LABORAL'),(4,'HOJA DE VIDA'),(5,'CERTIFICACIONES LABORALES'),(6,'DIPLOMAS'),(7,'ACTA DE GRADO'),(8,'CURSO INTRODUCCIÓN A MIPG '),(9,'CURSO INTEGRIDAD, TRANSPARENCIA, Y LUCHA CONTRA LA CORRUPCIÓN '),(10,'CARNET DE VACUNACIÓN COVID-19'),(11,'EXAMEN MÉDICO OCUPACIONAL'),(12,'CURSO HUMANIZACIÓN EN SALUD'),(13,'CERTIFICACIÓN DE ANTECEDENTES JUDICIALES (POLICÍA)'),(14,'CURSO 50 HORAS DEL SG-SST'),(15,'SISTEMA REGISTRO NACIONAL DE MEDIDAS CORRECTIVAS (RNMC)'),(16,'CERTIFICADO DE ANTECEDENTES FISCALES (CONTRALORÍA)'),(17,'CERTIFICACIÓN DE ANTECEDENTES DISCIPLINARIOS (PROCURADURÍA) '),(18,'CERTIFICACIÓN A ARL'),(19,'CERTIFICACIÓN PENSIÓN'),(20,'CERTIFICACIÓN SALUD'),(21,'CERTIFICACIÓN SAT'),(22,'PAZ Y SALVO MUNICIPAL');
 /*!40000 ALTER TABLE `seg_tipo_docs_tercero` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1002,14 +1071,18 @@ CREATE TABLE `seg_valor_cotizacion` (
   `id_val_cot` int(11) NOT NULL AUTO_INCREMENT,
   `id_tercero` int(11) DEFAULT NULL,
   `id_cot_ter` int(11) unsigned DEFAULT NULL,
+  `cant_entrega` int(11) DEFAULT '0',
   `valor` decimal(15,2) DEFAULT NULL,
   `fec_reg` timestamp NULL DEFAULT NULL,
+  `id_user_act` int(11) DEFAULT NULL,
+  `tipo_user_act` char(5) DEFAULT NULL,
+  `fec_act` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id_val_cot`),
   KEY `id_tercero` (`id_tercero`),
   KEY `seg_valor_cotizacion_ibfk_2` (`id_cot_ter`),
   CONSTRAINT `seg_valor_cotizacion_ibfk_1` FOREIGN KEY (`id_tercero`) REFERENCES `seg_terceros` (`id_tercero`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `seg_valor_cotizacion_ibfk_2` FOREIGN KEY (`id_cot_ter`) REFERENCES `seg_cotizaciones` (`id_cot`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=113 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=142 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1018,7 +1091,7 @@ CREATE TABLE `seg_valor_cotizacion` (
 
 LOCK TABLES `seg_valor_cotizacion` WRITE;
 /*!40000 ALTER TABLE `seg_valor_cotizacion` DISABLE KEYS */;
-INSERT INTO `seg_valor_cotizacion` VALUES (96,3,128,500.00,'2022-02-03 14:54:56'),(97,3,129,150.00,'2022-02-03 14:54:56'),(98,3,130,200.00,'2022-02-03 14:54:56'),(99,3,131,600.00,'2022-02-03 14:54:56'),(100,3,132,500.00,'2022-02-03 14:54:56'),(101,3,133,12000.00,'2022-02-03 14:54:56'),(102,3,134,1200.00,'2022-02-03 14:54:56'),(103,1,128,450.00,'2022-02-03 14:56:31'),(104,1,129,130.00,'2022-02-03 14:56:31'),(105,1,130,240.00,'2022-02-03 14:56:31'),(106,1,131,500.00,'2022-02-03 14:56:31'),(107,1,132,1000.00,'2022-02-03 14:56:31'),(108,1,133,10000.00,'2022-02-03 14:56:31'),(109,1,134,1400.00,'2022-02-03 14:56:31'),(110,1,135,50.00,'2022-02-15 20:20:48'),(111,1,136,50.00,'2022-02-15 20:20:48'),(112,1,137,50.00,'2022-02-15 20:20:48');
+INSERT INTO `seg_valor_cotizacion` VALUES (96,3,128,0,500.00,'2022-02-03 14:54:56',NULL,NULL,NULL),(97,3,129,0,150.00,'2022-02-03 14:54:56',NULL,NULL,NULL),(98,3,130,0,200.00,'2022-02-03 14:54:56',NULL,NULL,NULL),(99,3,131,0,600.00,'2022-02-03 14:54:56',NULL,NULL,NULL),(100,3,132,0,500.00,'2022-02-03 14:54:56',NULL,NULL,NULL),(101,3,133,0,12000.00,'2022-02-03 14:54:56',NULL,NULL,NULL),(102,3,134,0,1200.00,'2022-02-03 14:54:56',NULL,NULL,NULL),(103,1,128,0,450.00,'2022-02-03 14:56:31',NULL,NULL,NULL),(104,1,129,0,130.00,'2022-02-03 14:56:31',NULL,NULL,NULL),(105,1,130,0,240.00,'2022-02-03 14:56:31',NULL,NULL,NULL),(106,1,131,0,500.00,'2022-02-03 14:56:31',NULL,NULL,NULL),(107,1,132,0,1000.00,'2022-02-03 14:56:31',NULL,NULL,NULL),(108,1,133,0,10000.00,'2022-02-03 14:56:31',NULL,NULL,NULL),(109,1,134,49,1400.00,'2022-02-03 14:56:31',NULL,NULL,NULL),(110,1,135,91,50.00,'2022-02-15 20:20:48',1,'otro','2022-02-22 21:26:26'),(111,1,136,100,50.00,'2022-02-15 20:20:48',1,'otro','2022-02-22 21:26:26'),(112,1,137,100,50.00,'2022-02-15 20:20:48',1,'otro','2022-02-22 21:26:26'),(113,1,139,0,12.00,'2022-02-24 20:52:44',NULL,NULL,NULL),(114,1,140,0,100.00,'2022-02-25 17:00:33',NULL,NULL,NULL),(115,22,141,0,50000.00,'2022-03-31 16:17:27',NULL,NULL,NULL),(116,22,142,0,2500000.00,'2022-03-31 16:17:27',NULL,NULL,NULL),(117,22,143,0,20000.00,'2022-03-31 16:17:27',NULL,NULL,NULL),(118,22,144,0,30000.00,'2022-03-31 16:17:27',NULL,NULL,NULL),(119,22,145,0,2000000.00,'2022-03-31 16:17:27',NULL,NULL,NULL),(120,1,141,0,60000.00,'2022-03-31 16:18:28',NULL,NULL,NULL),(121,1,142,0,3000000.00,'2022-03-31 16:18:28',NULL,NULL,NULL),(122,1,143,0,30000.00,'2022-03-31 16:18:28',NULL,NULL,NULL),(123,1,144,0,40000.00,'2022-03-31 16:18:28',NULL,NULL,NULL),(124,1,145,0,2600000.00,'2022-03-31 16:18:28',NULL,NULL,NULL),(125,1,146,0,30.00,'2022-04-19 16:56:39',NULL,NULL,NULL),(126,1,147,0,50.00,'2022-04-19 16:56:39',NULL,NULL,NULL),(127,1,148,0,30.00,'2022-04-19 16:56:39',NULL,NULL,NULL),(128,1,149,0,100.00,'2022-04-19 19:39:59',NULL,NULL,NULL),(129,1,150,0,100.00,'2022-04-19 19:39:59',NULL,NULL,NULL),(130,1,151,0,100.00,'2022-04-19 19:39:59',NULL,NULL,NULL),(131,1,152,0,100.00,'2022-04-19 19:39:59',NULL,NULL,NULL),(132,1,153,0,100.00,'2022-04-19 19:39:59',NULL,NULL,NULL),(133,1,154,0,100.00,'2022-04-19 19:39:59',NULL,NULL,NULL),(134,1,155,0,100.00,'2022-04-19 19:39:59',NULL,NULL,NULL),(135,1,156,0,100.00,'2022-04-19 19:39:59',NULL,NULL,NULL),(136,1,157,0,100.00,'2022-04-22 16:18:04',NULL,NULL,NULL),(137,1,158,0,100.00,'2022-04-22 16:18:04',NULL,NULL,NULL),(138,1,159,0,100.00,'2022-04-22 16:18:04',NULL,NULL,NULL),(139,1,163,0,100.00,'2022-05-03 19:49:36',NULL,NULL,NULL),(140,1,164,0,100.00,'2022-05-03 19:49:36',NULL,NULL,NULL),(141,1,165,0,100.00,'2022-05-03 19:49:36',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `seg_valor_cotizacion` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -1031,4 +1104,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-02-21  9:34:21
+-- Dump completed on 2022-07-06 11:33:42
